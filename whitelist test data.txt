@@ -18,36 +18,36 @@
 
 Test User:
 
-HWID: cd0aa9856147b6c5b4ff2b7dfee5da20aa38253099ef1b4a64aced233c9afe29
 Identifier: CaptainEz
+HWID: cd0aa9856147b6c5b4ff2b7dfee5da20aa38253099ef1b4a64aced233c9afe29
 DiscordId: 895500903799463976
 
 Test User 2:
 
-HWID: 0a5eb100225ebf54b099b54dbc1a6da4de910efb553f9b76970cf93f7fe8b1a0
 Identifier: Dyno
+HWID: 0a5eb100225ebf54b099b54dbc1a6da4de910efb553f9b76970cf93f7fe8b1a0
 DiscordId: 155149108183695360
 
 Test User 3:
 
-HWID: 213e723d05ed923b3cda767424a329fc12a906bd85b976cbffe22861a8e68089
 Identifier: corrade
+HWID: 213e723d05ed923b3cda767424a329fc12a906bd85b976cbffe22861a8e68089
 DiscordId: 999776749070078004
 
 Test User 4:
 
-HWID: f315794fa1fbbb5a7a910bc0ced6e476d7e37cc623f0f5211a4fa6edd6e50e00
 Identifier: roblox update tracker
+HWID: f315794fa1fbbb5a7a910bc0ced6e476d7e37cc623f0f5211a4fa6edd6e50e00
 DiscordId: 1218229252692906089
 
 Test User 5:
 
+Identifier: Zayed
 HWID: 45d25abffe8c792d74d30346429b5bc244b815eeb378a9c38395f7a466cf6894
-Identifier: zayed
 DiscordId: 1393720838590693386
 
 Test User 6:
 
+Identifier: crd (corrade)
 HWID: 2735dcf947ec0402c0817993fcbb76c37839117db46d8af4b91be15c59276269
-Identifier: crd
 Discord ID: 704143981520486441
