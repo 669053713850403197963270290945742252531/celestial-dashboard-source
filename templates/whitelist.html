@@ -1,0 +1,331 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="flex items-center justify-between mb-6">
+  <h2 class="text-3xl font-bold">Whitelist Management</h2>
+  <button onclick="openAddModal()" class="bg-blue-600 text-white px-4 py-2 rounded-lg shadow hover:bg-blue-500 transition">
+    + Add User
+  </button>
+</div>
+
+<!-- Search Bar + Filter -->
+<div class="mb-4 flex items-center space-x-2">
+  <input type="text" id="searchInput" placeholder="Search..." 
+         class="flex-1 p-3 rounded-lg bg-blue-950/50 text-white border border-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-400">
+  
+  <!-- Filter Dropdown -->
+  <select id="filterSelect" class="p-3 rounded-lg bg-blue-950/50 text-white border border-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-400">
+    <option value="Identifier">Identifier</option>
+    <option value="HWID">HWID</option>
+    <option value="Rank">Rank</option>
+    <option value="DiscordId">Discord ID</option>
+    <option value="JoinDate">Join Date</option>
+  </select>
+</div>
+
+<!-- Whitelist Table -->
+<div class="bg-blue-800/60 shadow-lg rounded-xl p-6 border border-blue-700 overflow-x-auto">
+  <table id="whitelistTable" class="w-full border-collapse text-left">
+    <thead>
+        <tr class="bg-blue-700">
+            <th class="p-3">Identifier</th>
+            <th class="p-3">HWID</th>
+            <th class="p-3">Discord ID</th>
+            <th class="p-3">Rank</th>
+            <th class="p-3">Join Date</th>
+            <th class="p-3">Key</th>
+            <th class="p-3">Notes</th>
+            <th class="p-3">Actions</th>
+        </tr>
+    </thead>
+    <tbody id="whitelistBody">
+      <!-- Rows dynamically inserted -->
+    </tbody>
+  </table>
+</div>
+
+<!-- Pagination -->
+<div class="flex justify-end mt-4 space-x-2" id="pagination"></div>
+
+<!-- Add/Edit Modal -->
+<div id="userModal" class="fixed inset-0 bg-black/60 backdrop-blur-sm hidden items-center justify-center z-50">
+  <div class="bg-blue-900 rounded-xl shadow-xl w-96 p-6 border border-blue-700 opacity-0 scale-95">
+    
+    <!-- Error messages -->
+    <div id="formErrors" class="mb-2 text-red-400 text-sm hidden"></div>
+    
+    <h3 id="modalTitle" class="text-xl font-bold mb-4">Add User</h3>
+    <form id="userForm" class="space-y-4" autocomplete="off">
+      <input type="text" name="Identifier" placeholder="Identifier"
+        class="w-full p-3 border border-blue-600 rounded-lg bg-blue-950/50 text-white focus:outline-none focus:ring-2 focus:ring-blue-400" required>
+      <input type="text" name="HWID" placeholder="HWID"
+        class="w-full p-3 border border-blue-600 rounded-lg bg-blue-950/50 text-white focus:outline-none focus:ring-2 focus:ring-blue-400" required>
+      <input type="text" name="DiscordId" placeholder="Discord ID"
+        class="w-full p-3 border border-blue-600 rounded-lg bg-blue-950/50 text-white focus:outline-none focus:ring-2 focus:ring-blue-400" required>
+      <select name="Rank" required
+        class="w-full p-3 border border-blue-600 rounded-lg bg-blue-950/50 text-white focus:outline-none focus:ring-2 focus:ring-blue-400">
+        <option value="" disabled selected>Select Rank</option>
+        <option value="User">User</option>
+        <option value="Moderator">Moderator</option>
+        <option value="Admin">Admin</option>
+        <option value="Owner">Owner</option>
+      </select>
+      <input type="text" name="Notes" placeholder="Notes (optional)"
+        class="w-full p-3 border border-blue-600 rounded-lg bg-blue-950/50 text-white focus:outline-none focus:ring-2 focus:ring-blue-400">
+
+      <div class="flex justify-end space-x-2">
+        <button type="button" onclick="closeModal()" class="px-4 py-2 rounded-lg bg-gray-600 hover:bg-gray-500 transition">Cancel</button>
+        <button type="submit" class="px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-500 transition">Save</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+
+
+<script>
+let users = [];
+let currentPage = 1;
+const rowsPerPage = 10;
+
+// Fetch whitelist from API (always latest)
+async function fetchUsers() {
+    try {
+        const res = await fetch("/api/whitelist");
+        const data = await res.json();
+        if(data.success) {
+            users = data.users.map(u => ({
+                ...u,
+                whitelisted: u.whitelisted ?? true // GitHub users treated as whitelisted
+            }));
+            renderTable();
+        } else {
+            alert("Failed to fetch whitelist: " + data.error);
+        }
+    } catch(e) {
+        console.error(e);
+        alert("Error fetching whitelist");
+    }
+}
+
+// Utility to show errors in modal
+function showFormErrors(errors) {
+    const errorDiv = document.getElementById("formErrors");
+    
+    if (!errors || errors.length === 0) {
+        errorDiv.classList.add("hidden");
+        errorDiv.innerHTML = "";
+        return;
+    }
+
+    // Use bullet points
+    errorDiv.innerHTML = "<ul class='list-disc pl-5'>" + errors.map(e => `<li>${e}</li>`).join("") + "</ul>";
+    errorDiv.classList.remove("hidden");
+}
+
+// Clear errors
+function clearFormErrors() {
+    const container = document.getElementById("formErrors");
+    container.innerHTML = "";
+    container.classList.add("hidden");
+}
+
+const modal = document.getElementById("userModal");
+const modalContent = modal.querySelector("div");
+const form = document.getElementById("userForm");
+
+function openModal(title) {
+    document.getElementById("modalTitle").innerText = title;
+    modal.classList.remove("hidden");
+    modal.classList.add("flex");
+    modalContent.classList.remove("animate-fadeZoomOut");
+    void modalContent.offsetWidth; // force reflow
+    modalContent.classList.add("animate-fadeZoomIn");
+}
+
+function closeModal() {
+    modalContent.classList.remove("animate-fadeZoomIn");
+    modalContent.classList.add("animate-fadeZoomOut");
+    modalContent.addEventListener("animationend", () => {
+        modal.classList.add("hidden");
+        modal.classList.remove("flex");
+    }, { once: true });
+}
+
+function openAddModal() {
+    form.reset();
+    form.dataset.editIdentifier = "";
+    clearFormErrors();
+    openModal("Add User");
+}
+
+function editUserObj(user) {
+    form.Identifier.value = user.Identifier;
+    form.HWID.value = user.HWID;
+    form.DiscordId.value = user.DiscordId;
+    form.Rank.value = user.Rank;
+    form.Notes.value = user.Notes || "";
+
+    form.dataset.editIdentifier = user.Identifier;
+    clearFormErrors();
+    openModal("Edit User");
+}
+
+// Handle form submission
+form.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    clearFormErrors();
+
+    const isEditing = !!form.dataset.editIdentifier;
+    const existing = isEditing ? users.find(u => u.Identifier === form.dataset.editIdentifier) : null;
+
+    const newUser = {
+        Identifier: form.Identifier.value.trim(),
+        HWID: form.HWID.value.trim(),
+        DiscordId: form.DiscordId.value.trim(),
+        Rank: form.Rank.value,
+        // Keep old JoinDate if editing, otherwise use current time
+        JoinDate: isEditing ? (existing?.JoinDate || new Date().toLocaleString()) : new Date().toLocaleString(),
+        // 🔑 Preserve Key on edits, only empty when adding
+        Key: isEditing ? (existing?.Key ?? "") : "",
+        Notes: form.Notes.value || ""
+    };
+
+    const errors = [];
+    if (newUser.Identifier.length < 3 || newUser.Identifier.length > 20) errors.push("Identifier must be 3-20 characters");
+    if (newUser.HWID.length !== 64) errors.push("HWID must be 64 characters (SHA-256)");
+    if (!/^\d{17,20}$/.test(newUser.DiscordId)) errors.push("Discord ID must be 17-20 digits");
+
+    if (errors.length) {
+        showFormErrors(errors);
+        return;
+    }
+
+    const apiURL = form.dataset.editIdentifier ? "/api/edit_user" : "/api/add_user";
+    const payload = form.dataset.editIdentifier ? { identifier: form.dataset.editIdentifier, user: newUser } : newUser;
+
+    try {
+        const res = await fetch(apiURL, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payload)
+        });
+        const data = await res.json();
+
+        if (data.success) {
+            await fetchUsers();
+            closeModal();
+            alert(form.dataset.editIdentifier ? "✅ User updated!" : "✅ User added!");
+        } else {
+            showFormErrors(data.error.split("\n"));
+        }
+    } catch (err) {
+        showFormErrors(["❌ Error saving user"]);
+        console.error(err);
+    }
+});
+
+async function removeUserObj(user) {
+    if (!confirm(`Are you sure you want to delete ${user.Identifier}?`)) return;
+
+    try {
+        const res = await fetch("/api/remove_user", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ identifier: user.Identifier })
+        });
+        const data = await res.json();
+        if (data.success) {
+            await fetchUsers(); 
+            alert("✅ User deleted successfully!");
+        } else {
+            alert("❌ Failed to delete user: " + data.error);
+        }
+    } catch (err) {
+        console.error(err);
+        alert("❌ Error deleting user");
+    }
+}
+
+// Render table with pagination and search
+function renderTable() {
+    const tbody = document.getElementById("whitelistBody");
+    tbody.innerHTML = "";
+
+    const searchQuery = document.getElementById("searchInput").value.toLowerCase();
+    const filterBy = document.getElementById("filterSelect").value;
+
+    const filtered = users.filter(u => {
+        if(!u) return false;
+        const value = u[filterBy] ? u[filterBy].toString().toLowerCase() : '';
+        return value.includes(searchQuery);
+    });
+
+    const filteredWithIndex = users
+    .map((u, idx) => ({ ...u, originalIndex: idx })) // keep original index
+    .filter(u => {
+        const value = u[filterBy] ? u[filterBy].toString().toLowerCase() : '';
+        return value.includes(searchQuery);
+    });
+
+    const start = (currentPage-1)*rowsPerPage;
+    const end = start + rowsPerPage;
+    const pageUsers = filteredWithIndex.slice(start, end);
+
+    pageUsers.forEach((u) => {
+        const tr = document.createElement("tr");
+        tr.className = "border-t border-blue-700";
+
+        tr.innerHTML = `
+            <td class="p-3">${u.Identifier}</td>
+            <td class="p-3">${u.HWID}</td>
+            <td class="p-3">${u.DiscordId}</td>
+            <td class="p-3">${u.Rank}</td>
+            <td class="p-3">${u.JoinDate}</td>
+            <td class="p-3">${u.Key || ""}</td>
+            <td class="p-3">${u.Notes || ""}</td>
+            <td class="p-3 space-x-2">
+                <button class="editBtn bg-yellow-600 text-white px-3 py-1 rounded hover:bg-yellow-500 transition">Edit</button>
+                <button class="removeBtn bg-red-600 text-white px-3 py-1 rounded hover:bg-red-500 transition">Remove</button>
+            </td>
+        `;
+
+        tr.querySelector(".editBtn").addEventListener("click", () => editUserObj(u));
+        tr.querySelector(".removeBtn").addEventListener("click", () => removeUserObj(u));
+
+        tbody.appendChild(tr);
+    });
+
+    renderPagination(filtered.length);
+}
+
+// Add event listener for live search AND filter
+document.getElementById("searchInput").addEventListener("input", () => { currentPage=1; renderTable(); });
+document.getElementById("filterSelect").addEventListener("change", () => { currentPage=1; renderTable(); });
+
+function toggleWhitelist(idx) {
+    users[idx].whitelisted = !users[idx].whitelisted;
+    renderTable();
+}
+
+// Pagination
+function renderPagination(totalItems) {
+    const pagination = document.getElementById("pagination");
+    pagination.innerHTML = "";
+    const totalPages = Math.ceil(totalItems/rowsPerPage);
+    for(let i=1;i<=totalPages;i++){
+        const btn = document.createElement("button");
+        btn.innerText = i;
+        btn.className = `px-3 py-1 rounded ${i===currentPage?'bg-blue-600':'bg-blue-500'} text-white`;
+        btn.onclick = () => { currentPage=i; renderTable(); };
+        pagination.appendChild(btn);
+    }
+}
+
+// Live search
+document.getElementById("searchInput").addEventListener("input", () => { currentPage=1; renderTable(); });
+
+// Initial fetch
+fetchUsers();
+</script>
+{% endblock %}

@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>{{ site_title }}</title>
+  <link rel="icon" type="image/png" href="{{ site_icon }}">
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <style>
+    @keyframes fadeZoomIn {
+      0% { opacity: 0; transform: scale(0.95); }
+      100% { opacity: 1; transform: scale(1); }
+    }
+    @keyframes fadeZoomOut {
+      0% { opacity: 1; transform: scale(1); }
+      100% { opacity: 0; transform: scale(0.95); }
+    }
+    .animate-fadeZoomIn { animation: fadeZoomIn 0.25s ease-out forwards; }
+    .animate-fadeZoomOut { animation: fadeZoomOut 0.2s ease-in forwards; }
+  </style>
+</head>
+<body class="bg-gradient-to-br from-blue-950 to-blue-950 text-white flex h-screen">
+
+  <!-- Mobile top bar -->
+  <header class="lg:hidden w-full bg-blue-900/80 backdrop-blur-md p-4 flex justify-between items-center shadow-xl">
+    <div class="flex items-center space-x-3">
+      <img src="{{ site_icon }}" alt="logo" class="w-6 h-6 rounded">
+      <span class="font-bold text-lg">{{ site_title }}</span>
+    </div>
+    <button onclick="toggleSidebar()" class="text-white text-2xl focus:outline-none">☰</button>
+  </header>
+
+  <!-- Sidebar -->
+  <aside id="sidebar"
+    class="fixed lg:static inset-y-0 left-0 w-64 bg-blue-900/80 backdrop-blur-md border-r border-blue-700 shadow-xl text-white p-6 space-y-6 flex flex-col transform -translate-x-full lg:translate-x-0 transition-transform duration-300 ease-in-out z-50">
+    <div class="flex items-center space-x-3">
+      <img src="{{ site_icon }}" alt="logo" class="w-8 h-8 rounded">
+      <h1 class="text-xl font-bold tracking-wide">{{ site_title }}</h1>
+    </div>
+        <nav class="space-y-2 flex-1 mt-6 lg:mt-0">
+        <a href="/" class="block px-4 py-2 rounded-lg hover:bg-blue-700/60 transition">Dashboard</a>
+        <a href="/users" class="block px-4 py-2 rounded-lg hover:bg-blue-700/60 transition">User List</a>
+        <a href="/wlmanagement" class="block px-4 py-2 rounded-lg hover:bg-blue-700/60 transition">Whitelist Management</a>
+        </nav>
+  </aside>
+
+  <!-- Mobile Overlay -->
+  <div id="overlay" onclick="toggleSidebar()" class="hidden fixed inset-0 bg-black/50 z-40 lg:hidden"></div>
+
+  <!-- Main Content -->
+  <main class="flex-1 p-10 overflow-y-auto lg:ml-0">
+    {% block content %}
+    {% endblock %}
+  </main>
+
+  <script>
+    function toggleSidebar() {
+      const sidebar = document.getElementById("sidebar");
+      const overlay = document.getElementById("overlay");
+      sidebar.classList.toggle("-translate-x-full");
+      overlay.classList.toggle("hidden");
+    }
+  </script>
+
+  <script>
+    // Sidebar link behavior
+    const currentPath = window.location.pathname;
+
+    document.querySelectorAll('aside nav a').forEach(link => {
+    // Add smooth color transition
+    link.classList.add('transition-colors', 'duration-300', 'ease-in-out');
+
+    // Highlight active page
+    if(link.getAttribute('href') === currentPath) {
+        link.classList.add('bg-blue-700/80', 'font-semibold');
+    } else {
+        link.classList.remove('bg-blue-700/80', 'font-semibold');
+    }
+
+    // Prevent reload if clicking current page
+    link.addEventListener('click', (e) => {
+        const targetPath = link.getAttribute('href');
+        if (targetPath === currentPath) {
+        e.preventDefault();
+        // Optional: subtle feedback for clicking current page
+        link.classList.add('animate-pulse');
+        setTimeout(() => link.classList.remove('animate-pulse'), 300);
+        }
+    });
+    });
+    </script>
+
+</body>
+</html>

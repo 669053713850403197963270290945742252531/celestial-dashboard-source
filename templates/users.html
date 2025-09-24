@@ -1,0 +1,88 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="flex items-center justify-between mb-6">
+  <h2 class="text-3xl font-bold">User List</h2>
+  <button onclick="openModal()" class="bg-blue-600 text-white px-4 py-2 rounded-lg shadow hover:bg-blue-500 transition">
+    + Add User
+  </button>
+</div>
+
+<!-- User Table -->
+<div class="bg-blue-800/60 shadow-lg rounded-xl p-6 border border-blue-700">
+  <table class="w-full border-collapse">
+    <thead>
+      <tr class="bg-blue-700 text-left">
+        <th class="p-3">Username</th>
+        <th class="p-3">Identifier</th>
+        <th class="p-3">Status</th>
+        <th class="p-3">Actions</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr class="border-t border-blue-700">
+        <td class="p-3">PlayerOne</td>
+        <td class="p-3">HWID12345</td>
+        <td class="p-3"><span class="bg-green-700/70 px-2 py-1 rounded">Whitelisted</span></td>
+        <td class="p-3 space-x-2">
+          <button class="bg-yellow-600 text-white px-3 py-1 rounded hover:bg-yellow-500 transition">Edit</button>
+          <button class="bg-red-600 text-white px-3 py-1 rounded hover:bg-red-500 transition">Remove</button>
+        </td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+<!-- Add User Modal -->
+<div id="addUserModal" class="fixed inset-0 bg-black/60 backdrop-blur-sm hidden items-center justify-center z-50">
+  <div id="addUserContent" class="bg-blue-900 rounded-xl shadow-xl w-96 p-6 border border-blue-700 opacity-0 scale-95">
+    <h3 class="text-xl font-bold mb-4">Add User</h3>
+    <form class="space-y-4">
+      <input type="text" placeholder="Username" class="w-full p-3 border border-blue-600 rounded-lg bg-blue-950/50 text-white focus:outline-none focus:ring-2 focus:ring-blue-400">
+      <input type="text" placeholder="Identifier (HWID, ID, etc.)" class="w-full p-3 border border-blue-600 rounded-lg bg-blue-950/50 text-white focus:outline-none focus:ring-2 focus:ring-blue-400">
+      <div class="flex justify-end space-x-2">
+        <button type="button" onclick="closeModal()" class="px-4 py-2 rounded-lg bg-gray-600 hover:bg-gray-500 transition">Cancel</button>
+        <button type="submit" class="px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-500 transition">Add</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+const modal = document.getElementById("addUserModal");
+const content = document.getElementById("addUserContent");
+
+// Open modal with fade/zoom
+function openModal() {
+  modal.classList.remove("hidden");
+  modal.classList.add("flex");
+
+  content.classList.remove("animate-fadeZoomOut");
+  void content.offsetWidth; // trigger reflow
+  content.classList.add("animate-fadeZoomIn");
+}
+
+// Close modal with fade/zoom
+function closeModal() {
+  content.classList.remove("animate-fadeZoomIn");
+  void content.offsetWidth;
+  content.classList.add("animate-fadeZoomOut");
+
+  content.addEventListener("animationend", () => {
+    modal.classList.add("hidden");
+    modal.classList.remove("flex");
+    content.style.opacity = 0;
+    content.style.transform = 'scale(0.95)';
+  }, { once: true });
+}
+
+// Close modal when clicking outside content
+modal.addEventListener("click", (e) => {
+  if(e.target === modal) closeModal();
+});
+</script>
+
+<script>
+</script>
+
+{% endblock %}
