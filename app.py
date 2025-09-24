@@ -3,6 +3,7 @@ from utils import fetch_whitelist, update_whitelist, fetch_users_from_github, up
 from datetime import datetime
 import config
 import re
+import os
 
 app = Flask(__name__)
 
@@ -128,6 +129,10 @@ def remove_user():
         return jsonify({"success": True})
     except Exception as e:
         return jsonify({"success": False, "error": str(e)})
+    
+if __name__ == "__main__":
+    port = int(os.environ.get("PORT", 5000))
+    app.run(host="0.0.0.0", port=port, debug=False)
 
 
 if __name__ == "__main__":
