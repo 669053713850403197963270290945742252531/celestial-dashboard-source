@@ -4,10 +4,63 @@ from datetime import datetime
 import config
 import re
 import os
+import sqlite3
 
 app = Flask(__name__)
 
-# Inject global site info
+# ==========================================================
+# Database Setup
+# ==========================================================
+
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+DB_PATH = os.path.join(BASE_DIR, "users.db")
+
+def init_db():
+    """Create the users.db file and table if they don't exist."""
+    print("======================================")
+    print("🗄️  Initializing local database")
+    print("Using database at:", DB_PATH)
+    print("File exists:", os.path.exists(DB_PATH))
+
+    conn = sqlite3.connect(DB_PATH)
+    conn.execute("PRAGMA foreign_keys = ON;")
+    cursor = conn.cursor()
+
+    # Create table if not exists
+    cursor.execute('''
+    CREATE TABLE IF NOT EXISTS users (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        username TEXT NOT NULL UNIQUE,
+        password TEXT NOT NULL,
+        hwid TEXT NOT NULL,
+        notes TEXT
+    );
+    ''')
+    conn.commit()
+
+    # List tables
+    cursor.execute("SELECT name FROM sqlite_master WHERE type='table';")
+    tables = cursor.fetchall()
+    print("Tables in DB:", tables)
+
+    # Print all users if any exist
+    cursor.execute("SELECT id, username, hwid, notes FROM users;")
+    rows = cursor.fetchall()
+    if rows:
+        print("\n📋 Current users in database:")
+        for row in rows:
+            print(f" - ID: {row[0]}, Username: {row[1]}, HWID: {row[2]}, Notes: {row[3]}")
+    else:
+        print("\n(no users found yet)")
+    print("======================================\n")
+
+    conn.close()
+
+init_db()
+
+# ==========================================================
+# Flask Globals
+# ==========================================================
 @app.context_processor
 def inject_globals():
     return {
@@ -15,13 +68,15 @@ def inject_globals():
         "site_title": config.SITE_TITLE
     }
 
+# ==========================================================
 # Routes
+# ==========================================================
 @app.route("/")
 def dashboard():
     return render_template("dashboard.html")
 
 @app.route("/users")
-def users():
+def users_page():
     return render_template("users.html")
 
 @app.route("/wlmanagement")
@@ -29,6 +84,9 @@ def wlmanagement():
     users = fetch_whitelist()
     return render_template("whitelist.html", users=users)
 
+# ==========================================================
+# API ROUTES
+# ==========================================================
 @app.route("/api/whitelist", methods=["GET"])
 def api_whitelist():
     try:
@@ -130,10 +188,9 @@ def remove_user():
     except Exception as e:
         return jsonify({"success": False, "error": str(e)})
     
+# ==========================================================
+# MAIN ENTRY
+# ==========================================================
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
-    app.run(host="0.0.0.0", port=port, debug=False)
-
-
-if __name__ == "__main__":
-    app.run(debug=True)
+    app.run(host="0.0.0.0", port=port, debug=True)
