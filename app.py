@@ -22,57 +22,6 @@ app.secret_key = "celestial_secret_key"
 
 # Session lasts 1 week
 app.permanent_session_lifetime = timedelta(weeks=1)
-
-# ==========================================================
-# HWID Utility
-# ==========================================================
-def get_hwid():
-    """Get the system's raw hardware UUID (HWID). Works on Windows and Render-like Linux."""
-    try:
-        # Windows: WMIC method
-        if platform.system() == "Windows":
-            result = subprocess.run(['wmic', 'csproduct', 'get', 'uuid'],
-                                    capture_output=True, text=True)
-            output = result.stdout.strip().split('\n')
-            if len(output) >= 2:
-                hwid = output[1].strip()
-                if hwid:
-                    print(f"Detected HWID (Windows): {hwid}")
-                    return hwid
-
-            # Try PowerShell fallback
-            result = subprocess.run(
-                ["powershell", "-Command", "(Get-CimInstance Win32_ComputerSystemProduct).UUID"],
-                capture_output=True, text=True
-            )
-            hwid = result.stdout.strip()
-            if hwid:
-                print(f"Detected HWID (PowerShell): {hwid}")
-                return hwid
-
-    except Exception as e:
-        print(f"[HWID Error Windows] {e}")
-
-    try:
-        # Linux / Render: use hostname or Docker hostname
-        if platform.system() in ("Linux", "Darwin"):
-            hwid = os.environ.get("HOSTNAME") or platform.node()
-            if hwid:
-                print(f"Detected HWID (Linux/Darwin): {hwid}")
-                return hwid
-
-        # Fallback: MAC address
-        mac = uuid.getnode()
-        if mac:
-            hwid = ':'.join(("%012X" % mac)[i:i+2] for i in range(0, 12, 2))
-            print(f"Detected HWID (MAC): {hwid}")
-            return hwid
-
-    except Exception as e:
-        print(f"[HWID Error Linux] {e}")
-
-    return None
-
     
 # ==========================================================
 # Database Setup
@@ -90,18 +39,17 @@ def init_db():
         CREATE TABLE IF NOT EXISTS users (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             username TEXT NOT NULL UNIQUE,
-            password TEXT NOT NULL,
-            hwid TEXT NOT NULL
+            password TEXT NOT NULL
         );
     ''')
     conn.commit()
 
-    cursor.execute("SELECT id, username, password, hwid FROM users;")
+    cursor.execute("SELECT id, username, password FROM users;")
     rows = cursor.fetchall()
     if rows:
         print("\n📋 Current users in database:")
         for row in rows:
-            print(f" - ID: {row[0]}, Username: {row[1]}, Password: {row[2][:10]}..., HWID: {row[3]}")
+            print(f" - ID: {row[0]}, Username: {row[1]}, Password: {row[2][:10]}...")
     else:
         print("\n(no users found yet)")
     print("======================================\n")
@@ -135,11 +83,8 @@ def inject_globals():
 # Routes
 # ==========================================================
 
-print("Generated HWID (render):", get_hwid())
-
 @app.route("/login")
 def login_page():
-    print(get_hwid())
     if session.get("logged_in"):
         return redirect(url_for("dashboard"))
     return render_template("login.html")
@@ -271,7 +216,6 @@ def remove_user():
     
 @app.route("/api/login", methods=["POST"])
 def api_login():
-    """Handle JSON-based login."""
     try:
         data = request.get_json()
         username = data.get("username")
@@ -283,23 +227,18 @@ def api_login():
         password_hash = hashlib.sha256(password.encode()).hexdigest()
         conn = sqlite3.connect(DB_PATH)
         cursor = conn.cursor()
-        cursor.execute("SELECT hwid FROM users WHERE username=? AND password=?", (username, password_hash))
+        cursor.execute("SELECT id FROM users WHERE username=? AND password=?", (username, password_hash))
         row = cursor.fetchone()
         conn.close()
 
         if not row:
             return jsonify(success=False, error="Invalid username or password")
 
-        local_hwid = get_hwid()
-        if not local_hwid or local_hwid != row[0]:
-            return jsonify(success=False, error="HWID mismatch")
-
         # ✅ Login success — set session cookie for a week
         session["logged_in"] = True
         session["username"] = username
-        session.permanent = True  # extend cookie expiration
+        session.permanent = True
 
-        print(f"✅ Successful login for {username} (HWID verified)")
         return jsonify(success=True)
     except Exception as e:
         return jsonify(success=False, error=str(e))
@@ -310,4 +249,3 @@ def api_login():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port, debug=True)
-    print("Generated HWID (render):", get_hwid())
