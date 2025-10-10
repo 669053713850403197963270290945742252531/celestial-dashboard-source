@@ -1,22 +1,58 @@
-from flask import Flask, render_template, request, jsonify
+from flask import Flask, render_template, request, jsonify, session, redirect, Response, url_for
 from utils import fetch_whitelist, update_whitelist, fetch_users_from_github, update_users_on_github, generate_key
-from datetime import datetime
+from datetime import datetime, timedelta
 import config
 import re
 import os
 import sqlite3
+import subprocess
+import hashlib
+from functools import wraps
 
 app = Flask(__name__)
 
 # ==========================================================
-# Database Setup
+# Configuration
 # ==========================================================
-
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 DB_PATH = os.path.join(BASE_DIR, "users.db")
+app.secret_key = "celestial_secret_key"
 
+# Session lasts 1 week
+app.permanent_session_lifetime = timedelta(weeks=1)
+
+# ==========================================================
+# HWID Utility
+# ==========================================================
+def get_hwid():
+    """Get system UUID (HWID) via WMIC or PowerShell."""
+    try:
+        result = subprocess.run(['wmic', 'csproduct', 'get', 'uuid'], capture_output=True, text=True)
+        output = result.stdout.strip().split('\n')
+        if len(output) >= 2:
+            hwid = output[1].strip().replace('\r', '')
+            if hwid:
+                print(f"Detected HWID: {repr(hwid)}")
+                return hwid
+    except Exception:
+        pass
+
+    try:
+        result = subprocess.run(
+            ["powershell", "-Command", "(Get-CimInstance Win32_ComputerSystemProduct).UUID"],
+            capture_output=True, text=True
+        )
+        hwid = result.stdout.strip()
+        print(f"Detected HWID: {repr(hwid)}")
+        return hwid
+    except Exception as e:
+        print("Error reading HWID:", e)
+        return None
+    
+# ==========================================================
+# Database Setup
+# ==========================================================
 def init_db():
-    """Create the users.db file and table if they don't exist."""
     print("======================================")
     print("🗄️  Initializing local database")
     print("Using database at:", DB_PATH)
@@ -25,38 +61,40 @@ def init_db():
     conn = sqlite3.connect(DB_PATH)
     conn.execute("PRAGMA foreign_keys = ON;")
     cursor = conn.cursor()
-
-    # Create table if not exists
     cursor.execute('''
-    CREATE TABLE IF NOT EXISTS users (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        username TEXT NOT NULL UNIQUE,
-        password TEXT NOT NULL,
-        hwid TEXT NOT NULL,
-        notes TEXT
-    );
+        CREATE TABLE IF NOT EXISTS users (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            username TEXT NOT NULL UNIQUE,
+            password TEXT NOT NULL,
+            hwid TEXT NOT NULL
+        );
     ''')
     conn.commit()
 
-    # List tables
-    cursor.execute("SELECT name FROM sqlite_master WHERE type='table';")
-    tables = cursor.fetchall()
-    print("Tables in DB:", tables)
-
-    # Print all users if any exist
-    cursor.execute("SELECT id, username, hwid, notes FROM users;")
+    cursor.execute("SELECT id, username, password, hwid FROM users;")
     rows = cursor.fetchall()
     if rows:
         print("\n📋 Current users in database:")
         for row in rows:
-            print(f" - ID: {row[0]}, Username: {row[1]}, HWID: {row[2]}, Notes: {row[3]}")
+            print(f" - ID: {row[0]}, Username: {row[1]}, Password: {row[2][:10]}..., HWID: {row[3]}")
     else:
         print("\n(no users found yet)")
     print("======================================\n")
-
     conn.close()
 
 init_db()
+
+# ==========================================================
+# Authentication Helpers
+# ==========================================================
+def login_required(f):
+    """Decorator that redirects to login if not signed in."""
+    @wraps(f)
+    def wrapper(*args, **kwargs):
+        if not session.get("logged_in"):
+            return redirect(url_for("login_page"))
+        return f(*args, **kwargs)
+    return wrapper
 
 # ==========================================================
 # Flask Globals
@@ -71,15 +109,30 @@ def inject_globals():
 # ==========================================================
 # Routes
 # ==========================================================
+
+@app.route("/login")
+def login_page():
+    if session.get("logged_in"):
+        return redirect(url_for("dashboard"))
+    return render_template("login.html")
+
+@app.route("/logout")
+def logout():
+    session.clear()
+    return redirect(url_for("login_page"))
+
 @app.route("/")
+@login_required
 def dashboard():
     return render_template("dashboard.html")
 
 @app.route("/users")
+@login_required
 def users_page():
     return render_template("users.html")
 
 @app.route("/wlmanagement")
+@login_required
 def wlmanagement():
     users = fetch_whitelist()
     return render_template("whitelist.html", users=users)
@@ -187,6 +240,41 @@ def remove_user():
         return jsonify({"success": True})
     except Exception as e:
         return jsonify({"success": False, "error": str(e)})
+    
+@app.route("/api/login", methods=["POST"])
+def api_login():
+    """Handle JSON-based login."""
+    try:
+        data = request.get_json()
+        username = data.get("username")
+        password = data.get("password")
+
+        if not username or not password:
+            return jsonify(success=False, error="Missing credentials")
+
+        password_hash = hashlib.sha256(password.encode()).hexdigest()
+        conn = sqlite3.connect(DB_PATH)
+        cursor = conn.cursor()
+        cursor.execute("SELECT hwid FROM users WHERE username=? AND password=?", (username, password_hash))
+        row = cursor.fetchone()
+        conn.close()
+
+        if not row:
+            return jsonify(success=False, error="Invalid username or password")
+
+        local_hwid = get_hwid()
+        if not local_hwid or local_hwid != row[0]:
+            return jsonify(success=False, error="HWID mismatch")
+
+        # ✅ Login success — set session cookie for a week
+        session["logged_in"] = True
+        session["username"] = username
+        session.permanent = True  # extend cookie expiration
+
+        print(f"✅ Successful login for {username} (HWID verified)")
+        return jsonify(success=True)
+    except Exception as e:
+        return jsonify(success=False, error=str(e))
     
 # ==========================================================
 # MAIN ENTRY

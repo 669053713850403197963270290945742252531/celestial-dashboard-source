@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Celestial Login</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+
+<style>
+  body {
+    background: radial-gradient(circle at top, #0a0a12 0%, #050507 100%);
+    color: #e5e7eb;
+    font-family: 'Inter', sans-serif;
+  }
+  .glow {
+    box-shadow: 0 0 20px rgba(100, 255, 218, 0.25);
+  }
+  .glow-text {
+    text-shadow: 0 0 8px rgba(100, 255, 218, 0.5);
+  }
+  input:focus {
+    outline: none;
+    box-shadow: 0 0 10px #64ffda;
+  }
+  button:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+
+  .fade-in {
+    animation: fadeIn 0.3s ease forwards;
+  }
+  .fade-out {
+    animation: fadeOut 0.3s ease forwards;
+  }
+
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(-4px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes fadeOut {
+    from { opacity: 1; transform: translateY(0); }
+    to { opacity: 0; transform: translateY(-4px); }
+  }
+</style>
+</head>
+<body class="flex items-center justify-center min-h-screen p-4">
+
+<div class="bg-[#0f0f17] glow p-6 sm:p-8 rounded-2xl shadow-xl w-full max-w-md border border-[#1e293b]">
+  <h1 class="text-2xl sm:text-3xl font-bold mb-6 text-center glow-text">Celestial Dashboard</h1>
+  <p class="text-gray-400 text-center mb-6 sm:mb-8">Authenticate to access your control panel</p>
+
+  <form id="loginForm" class="space-y-4" autocomplete="off" autocapitalize="off" spellcheck="false">
+    <input id="username" type="text" placeholder="Username"
+      autocomplete="off" autocorrect="off" autocapitalize="none"
+      class="w-full px-4 py-3 rounded-xl bg-[#14141f] border border-gray-700 focus:border-[#64ffda] text-white placeholder-gray-500 transition" />
+
+    <input id="password" type="password" placeholder="Password"
+      autocomplete="new-password" autocorrect="off" autocapitalize="none" spellcheck="false"
+      class="w-full px-4 py-3 rounded-xl bg-[#14141f] border border-gray-700 focus:border-[#64ffda] text-white placeholder-gray-500 transition" />
+
+    <!-- Error message -->
+    <p id="errorMessage" class="hidden text-red-500 text-center text-sm mt-2"></p>
+
+    <button id="loginButton" type="submit"
+      class="w-full py-3 bg-[#64ffda] text-[#0a0a12] rounded-xl font-semibold hover:bg-[#4de0c0] transition">
+      Sign In
+    </button>
+  </form>
+
+  <p class="text-center text-gray-500 mt-6 text-sm">Unauthorized access is prohibited.</p>
+</div>
+
+<script>
+  document.getElementById("loginForm").addEventListener("submit", async (e) => {
+    e.preventDefault();
+    await attemptLogin();
+  });
+
+  async function attemptLogin() {
+    const username = document.getElementById("username").value.trim();
+    const password = document.getElementById("password").value.trim();
+    const button = document.getElementById("loginButton");
+
+    if (!username || !password) {
+      showError("Please enter both username and password.");
+      return;
+    }
+
+    hideError();
+    button.disabled = true;
+    button.textContent = "Signing in...";
+
+    try {
+      const res = await fetch("/api/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ username, password })
+      });
+
+      const data = await res.json();
+
+      if (data.success) {
+        window.location.href = "/wlmanagement";
+      } else {
+        showError(data.error || "Login failed. Please try again.");
+      }
+    } catch (err) {
+      showError("An error occurred while logging in.");
+      console.error(err);
+    } finally {
+      button.disabled = false;
+      button.textContent = "Sign In";
+    }
+  }
+
+let errorTimeout;
+
+function showError(message) {
+    const errorMessage = document.getElementById("errorMessage");
+
+    // Cancel any existing hide timer
+    clearTimeout(errorTimeout);
+
+    // Stop any ongoing fade-out animation cleanly
+    errorMessage.classList.remove("fade-out", "hidden");
+
+    // Force reflow to reset animation timing
+    void errorMessage.offsetWidth;
+
+    // Set new error text
+    errorMessage.textContent = message;
+
+    // Trigger fade-in animation
+    errorMessage.classList.add("fade-in");
+
+    // Remove fade-in class after animation completes
+    errorMessage.addEventListener("animationend", (e) => {
+        if (e.animationName === "fadeIn") {
+            errorMessage.classList.remove("fade-in");
+        }
+    }, { once: true });
+
+    // Schedule it to hide after 3 seconds
+    errorTimeout = setTimeout(() => {
+        hideError();
+    }, 3000);
+}
+
+function hideError() {
+    const errorMessage = document.getElementById("errorMessage");
+
+    clearTimeout(errorTimeout);
+
+    // Cancel fade-in state and reset
+    errorMessage.classList.remove("fade-in");
+    void errorMessage.offsetWidth;
+
+    // Trigger fade-out
+    errorMessage.classList.add("fade-out");
+
+    // When fade-out finishes, hide it fully
+    errorMessage.addEventListener("animationend", (e) => {
+        if (e.animationName === "fadeOut") {
+            errorMessage.classList.add("hidden");
+            errorMessage.textContent = "";
+            errorMessage.classList.remove("fade-out");
+        }
+    }, { once: true });
+}
+
+
+
+</script>
+
+</body>
+</html>

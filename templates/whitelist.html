@@ -327,5 +327,20 @@ document.getElementById("searchInput").addEventListener("input", () => { current
 
 // Initial fetch
 fetchUsers();
+
+document.addEventListener("DOMContentLoaded", () => {
+    const params = new URLSearchParams(window.location.search);
+    const action = params.get("action");
+
+    if (action === "add") {
+        openAddModal();
+    }
+    if (action === "remove") {
+        // If you have a remove modal, open it
+        // openRemoveModal();
+        alert("Remove modal not yet implemented.");
+    }
+});
+
 </script>
 {% endblock %}
