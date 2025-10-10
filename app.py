@@ -8,6 +8,8 @@ import sqlite3
 import subprocess
 import hashlib
 from functools import wraps
+import platform
+import uuid
 
 app = Flask(__name__)
 
@@ -25,29 +27,52 @@ app.permanent_session_lifetime = timedelta(weeks=1)
 # HWID Utility
 # ==========================================================
 def get_hwid():
-    """Get system UUID (HWID) via WMIC or PowerShell."""
+    """Get the system's raw hardware UUID (HWID). Works on Windows and Render-like Linux."""
     try:
-        result = subprocess.run(['wmic', 'csproduct', 'get', 'uuid'], capture_output=True, text=True)
-        output = result.stdout.strip().split('\n')
-        if len(output) >= 2:
-            hwid = output[1].strip().replace('\r', '')
+        # Windows: WMIC method
+        if platform.system() == "Windows":
+            result = subprocess.run(['wmic', 'csproduct', 'get', 'uuid'],
+                                    capture_output=True, text=True)
+            output = result.stdout.strip().split('\n')
+            if len(output) >= 2:
+                hwid = output[1].strip()
+                if hwid:
+                    print(f"Detected HWID (Windows): {hwid}")
+                    return hwid
+
+            # Try PowerShell fallback
+            result = subprocess.run(
+                ["powershell", "-Command", "(Get-CimInstance Win32_ComputerSystemProduct).UUID"],
+                capture_output=True, text=True
+            )
+            hwid = result.stdout.strip()
             if hwid:
-                print(f"Detected HWID: {repr(hwid)}")
+                print(f"Detected HWID (PowerShell): {hwid}")
                 return hwid
-    except Exception:
-        pass
+
+    except Exception as e:
+        print(f"[HWID Error Windows] {e}")
 
     try:
-        result = subprocess.run(
-            ["powershell", "-Command", "(Get-CimInstance Win32_ComputerSystemProduct).UUID"],
-            capture_output=True, text=True
-        )
-        hwid = result.stdout.strip()
-        print(f"Detected HWID: {repr(hwid)}")
-        return hwid
+        # Linux / Render: use hostname or Docker hostname
+        if platform.system() in ("Linux", "Darwin"):
+            hwid = os.environ.get("HOSTNAME") or platform.node()
+            if hwid:
+                print(f"Detected HWID (Linux/Darwin): {hwid}")
+                return hwid
+
+        # Fallback: MAC address
+        mac = uuid.getnode()
+        if mac:
+            hwid = ':'.join(("%012X" % mac)[i:i+2] for i in range(0, 12, 2))
+            print(f"Detected HWID (MAC): {hwid}")
+            return hwid
+
     except Exception as e:
-        print("Error reading HWID:", e)
-        return None
+        print(f"[HWID Error Linux] {e}")
+
+    return None
+
     
 # ==========================================================
 # Database Setup
@@ -110,8 +135,11 @@ def inject_globals():
 # Routes
 # ==========================================================
 
+print("Generated HWID (render):", get_hwid())
+
 @app.route("/login")
 def login_page():
+    print(get_hwid())
     if session.get("logged_in"):
         return redirect(url_for("dashboard"))
     return render_template("login.html")
@@ -282,3 +310,4 @@ def api_login():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port, debug=True)
+    print("Generated HWID (render):", get_hwid())
