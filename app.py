@@ -243,6 +243,18 @@ def api_login():
     except Exception as e:
         return jsonify(success=False, error=str(e))
     
+@app.route("/api/user_count")
+def get_user_count():
+    try:
+        conn = sqlite3.connect("users.db")
+        cursor = conn.cursor()
+        cursor.execute("SELECT COUNT(*) FROM users")  # assumes your table is named 'users'
+        count = cursor.fetchone()[0]
+        conn.close()
+        return jsonify(success=True, count=count)
+    except Exception as e:
+        return jsonify(success=False, error=str(e))
+    
 # ==========================================================
 # MAIN ENTRY
 # ==========================================================

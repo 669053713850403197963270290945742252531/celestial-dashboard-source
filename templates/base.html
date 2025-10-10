@@ -11,44 +11,117 @@
       0% { opacity: 0; transform: scale(0.95); }
       100% { opacity: 1; transform: scale(1); }
     }
-    @keyframes fadeZoomOut {
-      0% { opacity: 1; transform: scale(1); }
-      100% { opacity: 0; transform: scale(0.95); }
-    }
     .animate-fadeZoomIn { animation: fadeZoomIn 0.25s ease-out forwards; }
-    .animate-fadeZoomOut { animation: fadeZoomOut 0.2s ease-in forwards; }
+
+    /* Glowing border effect */
+    .glow-border {
+      position: relative;
+      overflow: hidden;
+    }
+    .glow-border::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      border-radius: 0.5rem;
+      padding: 1px;
+      background: linear-gradient(90deg, #00aaff, #6b21a8, #00aaff);
+      background-size: 200% 200%;
+      animation: glowmove 3s linear infinite;
+
+      /* Proper masking for both WebKit & standard */
+      -webkit-mask:
+        linear-gradient(#000 0 0) content-box,
+        linear-gradient(#000 0 0);
+      mask:
+        linear-gradient(#000 0 0) content-box, 
+        linear-gradient(#000 0 0);
+      -webkit-mask-composite: xor;
+      mask-composite: exclude;
+    }
+
+    @keyframes glowmove {
+      0% { background-position: 0% 50%; }
+      100% { background-position: 200% 50%; }
+    }
   </style>
 </head>
-<body class="bg-gradient-to-br from-blue-950 to-blue-950 text-white flex h-screen">
 
-  <!-- Mobile top bar -->
-  <header class="lg:hidden w-full bg-blue-900/80 backdrop-blur-md p-4 flex justify-between items-center shadow-xl">
+<body class="bg-gradient-to-br from-[#030617] to-[#0a1a3a] text-white flex h-screen overflow-hidden">
+
+  <!-- Mobile Top Bar -->
+  <header class="lg:hidden w-full bg-blue-950/70 backdrop-blur-md p-4 flex justify-between items-center shadow-lg border-b border-blue-800">
     <div class="flex items-center space-x-3">
       <img src="{{ site_icon }}" alt="logo" class="w-6 h-6 rounded">
-      <span class="font-bold text-lg">{{ site_title }}</span>
+      <span class="font-semibold text-lg tracking-wide">{{ site_title }}</span>
     </div>
-    <button onclick="toggleSidebar()" class="text-white text-2xl focus:outline-none">☰</button>
+    <button onclick="toggleSidebar()" class="text-cyan-400 text-2xl focus:outline-none">☰</button>
   </header>
 
   <!-- Sidebar -->
   <aside id="sidebar"
-    class="fixed lg:static inset-y-0 left-0 w-64 bg-blue-900/80 backdrop-blur-md border-r border-blue-700 shadow-xl text-white p-6 space-y-6 flex flex-col transform -translate-x-full lg:translate-x-0 transition-transform duration-300 ease-in-out z-50">
+    class="fixed lg:static inset-y-0 left-0 w-64 bg-gradient-to-b from-blue-950/80 to-indigo-950/80 backdrop-blur-md border-r border-blue-900 shadow-[0_0_25px_rgba(0,150,255,0.2)] text-white p-6 space-y-6 flex flex-col transform -translate-x-full lg:translate-x-0 transition-transform duration-300 ease-in-out z-50 animate-fadeZoomIn">
+    
+    <!-- Logo and Title -->
     <div class="flex items-center space-x-3">
-      <img src="{{ site_icon }}" alt="logo" class="w-8 h-8 rounded">
-      <h1 class="text-xl font-bold tracking-wide">{{ site_title }}</h1>
+      <img src="{{ site_icon }}" alt="logo" class="w-8 h-8 rounded shadow-[0_0_10px_rgba(0,200,255,0.5)]">
+      <h1 class="text-xl font-bold tracking-wider text-cyan-300 drop-shadow-md">{{ site_title }}</h1>
     </div>
-        <nav class="space-y-2 flex-1 mt-6 lg:mt-0">
-        <a href="/" class="block px-4 py-2 rounded-lg hover:bg-blue-700/60 transition">Dashboard</a>
-        <a href="/users" class="block px-4 py-2 rounded-lg hover:bg-blue-700/60 transition">User List</a>
-        <a href="/wlmanagement" class="block px-4 py-2 rounded-lg hover:bg-blue-700/60 transition">Whitelist Management</a>
-        </nav>
+
+    <!-- Navigation -->
+    <nav class="space-y-3 flex-1 mt-6 lg:mt-0">
+      <a href="/"
+        class="block px-4 py-3 rounded-lg glow-border transition-colors duration-200
+                {% if request.path == '/' %}
+                  bg-blue-600/60 text-white shadow-md
+                {% else %}
+                  bg-blue-900/40 hover:bg-blue-800/40 text-cyan-300
+                {% endif %}">
+        <span class="font-medium tracking-wide">Dashboard</span>
+      </a>
+
+      <a href="/users"
+        class="block px-4 py-3 rounded-lg glow-border transition-colors duration-200
+                {% if '/users' in request.path %}
+                  bg-blue-600/60 text-white shadow-md
+                {% else %}
+                  bg-blue-900/40 hover:bg-blue-800/40 text-cyan-300
+                {% endif %}">
+        <span class="font-medium tracking-wide">User List</span>
+      </a>
+
+      <a href="/wlmanagement"
+        class="block px-4 py-3 rounded-lg glow-border transition-colors duration-200
+                {% if '/wlmanagement' in request.path %}
+                  bg-blue-600/60 text-white shadow-md
+                {% else %}
+                  bg-blue-900/40 hover:bg-blue-800/40 text-cyan-300
+                {% endif %}">
+        <span class="font-medium tracking-wide">Whitelist Management</span>
+      </a>
+    </nav>
+
+    <!-- Sidebar Footer -->
+    <div class="hidden lg:block text-xs text-gray-400 border-t border-blue-800/60 pt-4">
+      <p class="text-center opacity-75">© 2025 Celestial Systems</p>
+    </div>
   </aside>
 
+  <style>
+    .glow-border {
+      box-shadow: 0 0 10px rgba(100, 255, 218, 0.15);
+    }
+
+    /* Optional: emphasize active button glow */
+    .shadow-md {
+      box-shadow: 0 0 20px rgba(100, 255, 218, 0.25) !important;
+    }
+  </style>
+
   <!-- Mobile Overlay -->
-  <div id="overlay" onclick="toggleSidebar()" class="hidden fixed inset-0 bg-black/50 z-40 lg:hidden"></div>
+  <div id="overlay" onclick="toggleSidebar()" class="hidden fixed inset-0 bg-black/60 z-40 lg:hidden"></div>
 
   <!-- Main Content -->
-  <main class="flex-1 p-10 overflow-y-auto lg:ml-0">
+  <main class="flex-1 p-6 lg:p-10 overflow-y-auto text-gray-100">
     {% block content %}
     {% endblock %}
   </main>
@@ -60,35 +133,19 @@
       sidebar.classList.toggle("-translate-x-full");
       overlay.classList.toggle("hidden");
     }
+
+    // Highlight current page
+    const currentPath = window.location.pathname;
+    document.querySelectorAll('aside nav a').forEach(link => {
+      const text = link.querySelector("span");
+      if (link.getAttribute('href') === currentPath) {
+        link.classList.add('bg-blue-800/60', 'shadow-[0_0_15px_rgba(0,200,255,0.4)]');
+        text.classList.add('text-cyan-200', 'font-semibold');
+      }
+    });
   </script>
 
-  <script>
-    // Sidebar link behavior
-    const currentPath = window.location.pathname;
-
-    document.querySelectorAll('aside nav a').forEach(link => {
-    // Add smooth color transition
-    link.classList.add('transition-colors', 'duration-300', 'ease-in-out');
-
-    // Highlight active page
-    if(link.getAttribute('href') === currentPath) {
-        link.classList.add('bg-blue-700/80', 'font-semibold');
-    } else {
-        link.classList.remove('bg-blue-700/80', 'font-semibold');
-    }
-
-    // Prevent reload if clicking current page
-    link.addEventListener('click', (e) => {
-        const targetPath = link.getAttribute('href');
-        if (targetPath === currentPath) {
-        e.preventDefault();
-        // Optional: subtle feedback for clicking current page
-        link.classList.add('animate-pulse');
-        setTimeout(() => link.classList.remove('animate-pulse'), 300);
-        }
-    });
-    });
-    </script>
+  {% include 'components/notifications.html' %}
 
 </body>
 </html>

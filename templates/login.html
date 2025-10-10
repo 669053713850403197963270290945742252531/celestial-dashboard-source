@@ -71,6 +71,50 @@
   <p class="text-center text-gray-500 mt-6 text-sm">Unauthorized access is prohibited.</p>
 </div>
 
+<div class="cookie-note">
+  <p>
+    🍪 This site uses a secure cookie to store your login session for up to one week after signing in.
+    If cookies are blocked, login sessions will not persist.
+  </p>
+</div>
+
+<style>
+.cookie-note {
+  position: fixed;
+  bottom: 15px;
+  right: 20px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  color: #aaa;
+  font-size: 0.75rem;
+  padding: 10px 14px;
+  border-radius: 8px;
+  max-width: 240px;
+  line-height: 1.3;
+  text-align: left;
+  backdrop-filter: blur(6px);
+  opacity: 0;
+  transform: translateY(8px);
+  transition: opacity 0.8s ease, transform 0.8s ease;
+  pointer-events: none; /* avoids accidental clicks */
+  z-index: 50;
+}
+
+.cookie-note.show {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+@media (max-width: 600px) {
+  .cookie-note {
+    right: 10px;
+    bottom: 10px;
+    max-width: 200px;
+    font-size: 0.7rem;
+  }
+}
+</style>
+
 <script>
   document.getElementById("loginForm").addEventListener("submit", async (e) => {
     e.preventDefault();
@@ -114,60 +158,68 @@
     }
   }
 
-let errorTimeout;
+  let errorTimeout;
 
-function showError(message) {
-    const errorMessage = document.getElementById("errorMessage");
+  function showError(message) {
+      const errorMessage = document.getElementById("errorMessage");
 
-    // Cancel any existing hide timer
-    clearTimeout(errorTimeout);
+      // Cancel any existing hide timer
+      clearTimeout(errorTimeout);
 
-    // Stop any ongoing fade-out animation cleanly
-    errorMessage.classList.remove("fade-out", "hidden");
+      // Stop any ongoing fade-out animation cleanly
+      errorMessage.classList.remove("fade-out", "hidden");
 
-    // Force reflow to reset animation timing
-    void errorMessage.offsetWidth;
+      // Force reflow to reset animation timing
+      void errorMessage.offsetWidth;
 
-    // Set new error text
-    errorMessage.textContent = message;
+      // Set new error text
+      errorMessage.textContent = message;
 
-    // Trigger fade-in animation
-    errorMessage.classList.add("fade-in");
+      // Trigger fade-in animation
+      errorMessage.classList.add("fade-in");
 
-    // Remove fade-in class after animation completes
-    errorMessage.addEventListener("animationend", (e) => {
-        if (e.animationName === "fadeIn") {
-            errorMessage.classList.remove("fade-in");
-        }
-    }, { once: true });
+      // Remove fade-in class after animation completes
+      errorMessage.addEventListener("animationend", (e) => {
+          if (e.animationName === "fadeIn") {
+              errorMessage.classList.remove("fade-in");
+          }
+      }, { once: true });
 
-    // Schedule it to hide after 3 seconds
-    errorTimeout = setTimeout(() => {
-        hideError();
-    }, 3000);
-}
+      // Schedule it to hide after 3 seconds
+      errorTimeout = setTimeout(() => {
+          hideError();
+      }, 3000);
+  }
 
-function hideError() {
-    const errorMessage = document.getElementById("errorMessage");
+  function hideError() {
+      const errorMessage = document.getElementById("errorMessage");
 
-    clearTimeout(errorTimeout);
+      clearTimeout(errorTimeout);
 
-    // Cancel fade-in state and reset
-    errorMessage.classList.remove("fade-in");
-    void errorMessage.offsetWidth;
+      // Cancel fade-in state and reset
+      errorMessage.classList.remove("fade-in");
+      void errorMessage.offsetWidth;
 
-    // Trigger fade-out
-    errorMessage.classList.add("fade-out");
+      // Trigger fade-out
+      errorMessage.classList.add("fade-out");
 
-    // When fade-out finishes, hide it fully
-    errorMessage.addEventListener("animationend", (e) => {
-        if (e.animationName === "fadeOut") {
-            errorMessage.classList.add("hidden");
-            errorMessage.textContent = "";
-            errorMessage.classList.remove("fade-out");
-        }
-    }, { once: true });
-}
+      // When fade-out finishes, hide it fully
+      errorMessage.addEventListener("animationend", (e) => {
+          if (e.animationName === "fadeOut") {
+              errorMessage.classList.add("hidden");
+              errorMessage.textContent = "";
+              errorMessage.classList.remove("fade-out");
+          }
+      }, { once: true });
+  }
+
+  document.addEventListener("DOMContentLoaded", () => {
+    const note = document.querySelector(".cookie-note");
+    // delay the fade-in by 1 second
+    setTimeout(() => {
+      note.classList.add("show");
+    }, 1000);
+  });
 
 
 

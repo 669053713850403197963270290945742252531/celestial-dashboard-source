@@ -1,60 +1,97 @@
 {% extends "base.html" %}
 
 {% block content %}
-<div class="min-h-screen py-6 px-4 sm:py-10 sm:px-8"
-     style="background: radial-gradient(circle at top, #0a0a12 0%, #050507 100%); font-family: 'Inter', sans-serif;">
-
+<div class="min-h-screen py-10 px-6 bg-transparent text-white">
   <div class="max-w-6xl mx-auto">
-
     <!-- Header -->
-    <div class="text-center mb-8 sm:mb-10">
-      <h1 class="text-3xl sm:text-4xl font-bold glow-text text-[#64ffda] mb-2">Celestial Dashboard</h1>
-      <p class="text-gray-400 text-sm sm:text-base">Manage your whitelist and users quickly.</p>
+    <div class="text-center mb-12">
+      <h1 class="text-4xl font-bold text-[#64ffda] glow-text mb-2">Celestial Dashboard</h1>
+      <p class="text-gray-400 text-base">Manage your whitelist and users quickly</p>
     </div>
 
     <!-- Stats -->
-    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6 mb-10 sm:mb-12">
-      <div class="bg-[#0f0f17]/90 border border-[#1e293b] glow p-5 sm:p-6 rounded-2xl text-center">
-        <p class="text-gray-400 text-sm sm:text-base">Total Whitelisted</p>
-        <h3 class="text-2xl sm:text-3xl font-bold text-[#64ffda] mt-1">123</h3>
+    <div class="grid grid-cols-1 sm:grid-cols-2 gap-6 mb-12">
+      <div class="bg-blue-950/60 border border-blue-800 rounded-2xl glow-card p-6 text-center hover:scale-[1.02] hover:bg-blue-900/70 transition-all duration-300">
+        <p class="text-gray-400 text-sm">Total Whitelisted</p>
+        <h3 class="text-3xl font-bold text-[#64ffda] mt-1">
+          <span id="whitelistedCount">0</span>
+        </h3>
       </div>
 
-      <div class="bg-[#0f0f17]/90 border border-[#1e293b] glow p-5 sm:p-6 rounded-2xl text-center">
-        <p class="text-gray-400 text-sm sm:text-base">Website Users</p>
-        <h3 class="text-2xl sm:text-3xl font-bold text-green-400 mt-1">87</h3>
-      </div>
+    <div class="bg-blue-950/60 border border-blue-800 rounded-2xl glow-card p-6 text-center hover:scale-[1.02] hover:bg-blue-900/70 transition-all duration-300">
+        <p class="text-gray-400 text-sm">Website Users</p>
+        <h3 class="text-3xl font-bold text-green-400 mt-1">
+            <span id="websiteUsersCount">0</span>
+        </h3>
     </div>
 
     <!-- Quick Links -->
     <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
-      <a href="/wlmanagement?action=add"
-         class="bg-[#0f0f17]/90 border border-[#1e293b] glow p-6 rounded-2xl flex flex-col items-center justify-center hover:bg-[#14141f]/90 transition">
-        <h3 class="text-xl font-semibold mb-2 text-[#64ffda]">Whitelist User</h3>
+      <div
+        onclick="window.location.href='/wlmanagement?action=add'"
+        class="cursor-pointer bg-blue-950/60 border border-blue-800 rounded-2xl glow-card p-6 flex flex-col items-center justify-center hover:bg-blue-900/70 hover:scale-[1.03] transition-all duration-300">
+        <h3 class="text-xl font-semibold mb-1 text-[#64ffda]">Whitelist User</h3>
         <p class="text-gray-400 text-sm">Quickly add a user to the whitelist</p>
-      </a>
+      </div>
 
-      <a href="/wlmanagement?action=remove"
-         class="bg-[#0f0f17]/90 border border-[#1e293b] glow p-6 rounded-2xl flex flex-col items-center justify-center hover:bg-[#14141f]/90 transition">
-        <h3 class="text-xl font-semibold mb-2 text-red-400">Unwhitelist User</h3>
+      <div
+        onclick="window.location.href='/wlmanagement?action=remove'"
+        class="cursor-pointer bg-blue-950/60 border border-blue-800 rounded-2xl glow-card p-6 flex flex-col items-center justify-center hover:bg-red-900/70 hover:scale-[1.03] transition-all duration-300">
+        <h3 class="text-xl font-semibold mb-1 text-red-400">Unwhitelist User</h3>
         <p class="text-gray-400 text-sm">Quickly remove a user from the whitelist</p>
-      </a>
+      </div>
     </div>
-
   </div>
 </div>
 
 <style>
-  .glow {
-    box-shadow: 0 0 20px rgba(100, 255, 218, 0.08);
+  .glow-card {
+    box-shadow: 0 0 15px rgba(100, 255, 218, 0.1);
   }
   .glow-text {
-    text-shadow: 0 0 8px rgba(100, 255, 218, 0.4);
+    text-shadow: 0 0 10px rgba(100, 255, 218, 0.4);
   }
-
   @media (hover: none) {
-    a:hover {
+    div:hover {
+      transform: none !important;
       background-color: inherit !important;
     }
   }
 </style>
+
+<script>
+async function updateWhitelistedCount() {
+    try {
+        const res = await fetch("/api/whitelist");
+        const data = await res.json();
+        if (data.success && Array.isArray(data.users)) {
+            const count = data.users.filter(u => u.whitelisted ?? true).length;
+            document.getElementById("whitelistedCount").innerText = count;
+        } else {
+            console.error("Failed to fetch whitelist:", data.error);
+        }
+    } catch (err) {
+        console.error("Error fetching whitelist:", err);
+    }
+}
+
+async function updateWebsiteUsersCount() {
+    try {
+        const res = await fetch("/api/user_count");
+        const data = await res.json();
+        if (data.success) {
+            document.getElementById("websiteUsersCount").innerText = data.count;
+        } else {
+            console.error("Failed to fetch user count:", data.error);
+        }
+    } catch (err) {
+        console.error("Error fetching user count:", err);
+    }
+}
+
+document.addEventListener("DOMContentLoaded", () => {
+    updateWhitelistedCount();
+    updateWebsiteUsersCount();
+});
+</script>
 {% endblock %}
