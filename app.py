@@ -83,6 +83,12 @@ def inject_globals():
 # Routes
 # ==========================================================
 
+@app.route("/")
+def root():
+    if session.get("logged_in"):
+        return redirect(url_for("dashboard"))
+    return redirect(url_for("login_page"))
+    
 @app.route("/login")
 def login_page():
     if session.get("logged_in"):
@@ -94,7 +100,7 @@ def logout():
     session.clear()
     return redirect(url_for("login_page"))
 
-@app.route("/")
+@app.route("/dashboard")
 @login_required
 def dashboard():
     return render_template("dashboard.html")
