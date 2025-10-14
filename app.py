@@ -1,6 +1,6 @@
 from flask import Flask, render_template, request, jsonify, session, redirect, Response, url_for
 from utils import fetch_whitelist, update_whitelist, fetch_users_from_github, update_users_on_github, generate_key
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 import config
 import re
 import os
@@ -260,6 +260,14 @@ def get_user_count():
         return jsonify(success=True, count=count)
     except Exception as e:
         return jsonify(success=False, error=str(e))
+    
+@app.route("/api/session_status")
+def session_status():
+    session_cookie = request.cookies.get("session")
+    if session_cookie:
+        return jsonify({"status": "valid"})
+    else:
+        return jsonify({"status": "invalid"})
     
 # ==========================================================
 # MAIN ENTRY

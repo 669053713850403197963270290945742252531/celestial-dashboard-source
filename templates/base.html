@@ -71,7 +71,7 @@
     <nav class="space-y-3 flex-1 mt-6 lg:mt-0">
       <a href="/dashboard"
         class="block px-4 py-3 rounded-lg glow-border transition-colors duration-200
-                {% if request.path == '/' %}
+                {% if request.path == '/dashboard' %}
                   bg-blue-600/60 text-white shadow-md
                 {% else %}
                   bg-blue-900/40 hover:bg-blue-800/40 text-cyan-300
@@ -116,9 +116,6 @@
       box-shadow: 0 0 20px rgba(100, 255, 218, 0.25) !important;
     }
   </style>
-
-  <!-- Mobile Overlay -->
-  <div id="overlay" onclick="toggleSidebar()" class="hidden fixed inset-0 bg-black/60 z-40 lg:hidden"></div>
 
   <!-- Main Content -->
   <main class="flex-1 p-6 lg:p-10 overflow-y-auto text-gray-100">

@@ -1,58 +1,150 @@
-/* modal animations (paste in styles.css) */
-@keyframes fadeZoomIn {
-  0% { opacity: 0; transform: scale(0.95); }
-  100% { opacity: 1; transform: scale(1); }
-}
-@keyframes fadeZoomOut {
-  0% { opacity: 1; transform: scale(1); }
-  100% { opacity: 0; transform: scale(0.95); }
-}
-@keyframes fadeIn {
-  from { opacity: 0; }
-  to   { opacity: 1; }
-}
-@keyframes fadeOut {
-  from { opacity: 1; }
-  to   { opacity: 0; }
+/* =========================
+   Custom Checkbox with Glow
+   ========================= */
+.custom-checkbox {
+  display: flex;
+  align-items: center;
+  justify-content: space-between; /* keep the text on the left, box on right */
+  cursor: pointer;
+  gap: 0.5rem;
+  font-weight: 500;
+  color: #c0c0c0;
+  position: relative;
 }
 
-/* animation classes */
-.fade-zoom-in  { animation: fadeZoomIn 0.28s cubic-bezier(.22,1,.36,1) forwards; }
-.fade-zoom-out { animation: fadeZoomOut 0.22s cubic-bezier(.4,0,.2,1) forwards; }
-.fade-in       { animation: fadeIn 0.28s ease-out forwards; }
-.fade-out      { animation: fadeOut 0.22s ease-in forwards; }
+/* remove browser checkbox */
+.custom-checkbox input[type="checkbox"] {
+  appearance: none;
+  -webkit-appearance: none;
+  width: 1.25rem;
+  height: 1.25rem;
+  border: 2px solid #00aaff;
+  border-radius: 0.35rem;
+  background-color: #0b1220;
+  position: relative;
+  cursor: pointer;
+  transition: all 0.2s ease-in-out;
+}
 
-/* base modal hidden state */
-#userModal {
-  display: none;               /* hidden initially */
-  position: fixed;
-  inset: 0;
-  z-index: 50;
+/* hover glow */
+.custom-checkbox input[type="checkbox"]:hover {
+  border-color: #6b21a8;
+  box-shadow: 0 0 8px rgba(100, 255, 218, 0.25);
+}
+
+/* checked state with tick */
+.custom-checkbox input[type="checkbox"]:checked {
+  background: linear-gradient(135deg, #00aaff, #6b21a8);
+  border-color: #00aaff;
+  box-shadow: 0 0 15px rgba(0,170,255,0.6), 0 0 30px rgba(107,33,168,0.3);
+}
+
+.custom-checkbox input[type="checkbox"]:checked::after {
+  content: '';
+  position: absolute;
+  top: 0.2rem;
+  left: 0.45rem;
+  width: 0.25rem;
+  height: 0.65rem;
+  border: solid white;
+  border-width: 0 2px 2px 0;
+  transform: rotate(45deg);
+}
+
+/* =========================
+   Glowing Toggle (for Settings)
+   ========================= */
+.glow-toggle {
+  position: relative; /* must be relative! */
+  display: inline-block;
+  width: 2.5rem;
+  height: 1.25rem;
+  cursor: pointer;
+}
+
+.glow-toggle input {
+  opacity: 0;
+  width: 100%;
+  height: 100%;
+  position: absolute;
+  margin: 0;
+  z-index: 2; /* clickable layer */
+  cursor: pointer;
+}
+
+.glow-toggle .slider {
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background-color: rgba(30,30,50,0.8);
+  border-radius: 9999px;
+  box-shadow: 0 0 10px rgba(100,255,218,0.15);
+  transition: background-color 0.3s;
+  z-index: 1;
+}
+
+.glow-toggle .slider::before {
+  content: "";
+  position: absolute;
+  width: 1rem;
+  height: 1rem;
+  left: 2px;
+  top: 50%;
+  transform: translateY(-50%);
+  background-color: #64ffda;
+  border-radius: 50%;
+  transition: transform 0.3s, background-color 0.3s, box-shadow 0.3s;
+  box-shadow: 0 0 8px rgba(100,255,218,0.5);
+}
+
+.glow-toggle input:checked + .slider {
+  background-color: rgba(50,50,70,0.9);
+}
+
+.glow-toggle input:checked + .slider::before {
+  transform: translateX(1.25rem) translateY(-50%);
+  background-color: #00d1ff;
+  box-shadow: 0 0 12px rgba(0,209,255,0.7);
+}
+
+.glow-toggle:hover .slider::before {
+  box-shadow: 0 0 12px rgba(100,255,218,0.8);
+}
+
+
+/* =========================
+   Glowing Settings Button
+   ========================= */
+.glow-settings {
+  width: 2rem;
+  height: 2rem;
+  border-radius: 0.5rem;
+  background: #0b1220;
+  border: 2px solid #00aaff;
+  display: flex;
   align-items: center;
   justify-content: center;
-  background-color: rgba(0,0,0,0);   /* will transition to dark when opened */
-  backdrop-filter: blur(0);
+  cursor: pointer;
+  transition: all 0.3s ease-in-out;
+  position: relative;
 }
 
-/* visible state (use JS to toggle .open) */
-#userModal.open {
-  display: flex;
-  background-color: rgba(0,0,0,0.55);
-  backdrop-filter: blur(4px);
+.glow-settings:hover {
+  border-color: #6b21a8;
+  box-shadow: 0 0 10px rgba(0,170,255,0.4), 0 0 20px rgba(107,33,168,0.3);
 }
 
-/* modal panel base */
-#modalContent {
-  width: 24rem; /* w-96 */
-  background: #0b1220; /* keep your colors */
-  border-radius: 0.75rem;
-  padding: 1.5rem;
-  border: 1px solid rgba(66,153,225,0.15);
-  transform-origin: center;
-  /* start state — animations will drive final state */
-  opacity: 0;
-  transform: scale(0.95);
+.glow-settings svg {
+  width: 1.25rem;
+  height: 1.25rem;
+  color: white;
+  transition: transform 0.2s ease;
 }
 
-/* ensure no Tailwind conflicting transform/transition interferes during animations */
-.fade-zoom-in, .fade-zoom-out { transition: none !important; transform-origin: center; }
+.glow-settings:hover svg {
+  transform: rotate(20deg) scale(1.1);
+}
+
+.glow-settings.active {
+  background: linear-gradient(135deg, #00aaff, #6b21a8);
+  box-shadow: 0 0 15px rgba(0,170,255,0.6), 0 0 30px rgba(107,33,168,0.3);
+}

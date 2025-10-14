@@ -11,6 +11,7 @@
 
     <!-- Stats -->
     <div class="grid grid-cols-1 sm:grid-cols-2 gap-6 mb-12">
+      <!-- Whitelisted Count -->
       <div class="bg-blue-950/60 border border-blue-800 rounded-2xl glow-card p-6 text-center hover:scale-[1.02] hover:bg-blue-900/70 transition-all duration-300">
         <p class="text-gray-400 text-sm">Total Whitelisted</p>
         <h3 class="text-3xl font-bold text-[#64ffda] mt-1">
@@ -18,11 +19,21 @@
         </h3>
       </div>
 
-    <div class="bg-blue-950/60 border border-blue-800 rounded-2xl glow-card p-6 text-center hover:scale-[1.02] hover:bg-blue-900/70 transition-all duration-300">
+      <!-- Website Users -->
+      <div class="bg-blue-950/60 border border-blue-800 rounded-2xl glow-card p-6 text-center hover:scale-[1.02] hover:bg-blue-900/70 transition-all duration-300">
         <p class="text-gray-400 text-sm">Website Users</p>
         <h3 class="text-3xl font-bold text-green-400 mt-1">
-            <span id="websiteUsersCount">0</span>
+          <span id="websiteUsersCount">0</span>
         </h3>
+      </div>
+    </div>
+
+    <!-- Session Status Card -->
+    <div class="grid place-items-center mb-12">
+      <div class="bg-blue-950/60 border border-blue-800 rounded-2xl glow-card p-6 text-center w-full sm:w-2/3 hover:scale-[1.02] hover:bg-blue-900/70 transition-all duration-300">
+        <p class="text-gray-400 text-sm">Session Status</p>
+        <h3 id="sessionStatusText" class="text-2xl font-bold mt-1 text-yellow-400">Checking...</h3>
+      </div>
     </div>
 
     <!-- Quick Links -->
@@ -47,51 +58,101 @@
 <style>
   .glow-card {
     box-shadow: 0 0 15px rgba(100, 255, 218, 0.1);
+    transition: transform 0.3s ease, background-color 0.3s ease, box-shadow 0.3s ease;
   }
-  .glow-text {
-    text-shadow: 0 0 10px rgba(100, 255, 218, 0.4);
+
+  .glow-card:hover {
+    transform: scale(1.02);
+    background-color: rgba(rgb(20, 51, 161));
+    box-shadow: 0 0 25px rgba(100, 255, 218, 0.4);
   }
-  @media (hover: none) {
-    div:hover {
-      transform: none !important;
-      background-color: inherit !important;
-    }
+
+  /* Pulsing animations */
+  .pulse-green {
+    color: #00ff88 !important;
+    animation: pulseGreen 2s infinite;
+    text-shadow: 0 0 12px #00ff88;
+  }
+
+  .pulse-red {
+    color: #ff4444 !important;
+    animation: pulseRed 2s infinite;
+    text-shadow: 0 0 12px #ff4444;
+  }
+
+  @keyframes pulseGreen {
+    0%, 100% { opacity: 1; text-shadow: 0 0 8px #00ff88; }
+    50% { opacity: 0.7; text-shadow: 0 0 20px #00ff88; }
+  }
+
+  @keyframes pulseRed {
+    0%, 100% { opacity: 1; text-shadow: 0 0 8px #ff4444; }
+    50% { opacity: 0.7; text-shadow: 0 0 20px #ff4444; }
   }
 </style>
 
 <script>
+/* -----------------------------
+   Fetch and Display Counts
+----------------------------- */
 async function updateWhitelistedCount() {
-    try {
-        const res = await fetch("/api/whitelist");
-        const data = await res.json();
-        if (data.success && Array.isArray(data.users)) {
-            const count = data.users.filter(u => u.whitelisted ?? true).length;
-            document.getElementById("whitelistedCount").innerText = count;
-        } else {
-            console.error("Failed to fetch whitelist:", data.error);
-        }
-    } catch (err) {
-        console.error("Error fetching whitelist:", err);
+  try {
+    const res = await fetch("/api/whitelist");
+    const data = await res.json();
+    if (data.success && Array.isArray(data.users)) {
+      document.getElementById("whitelistedCount").innerText = data.users.length;
     }
+  } catch (err) {
+    console.error("Error fetching whitelist:", err);
+  }
 }
 
 async function updateWebsiteUsersCount() {
-    try {
-        const res = await fetch("/api/user_count");
-        const data = await res.json();
-        if (data.success) {
-            document.getElementById("websiteUsersCount").innerText = data.count;
-        } else {
-            console.error("Failed to fetch user count:", data.error);
-        }
-    } catch (err) {
-        console.error("Error fetching user count:", err);
+  try {
+    const res = await fetch("/api/user_count");
+    const data = await res.json();
+    if (data.success) {
+      document.getElementById("websiteUsersCount").innerText = data.count;
     }
+  } catch (err) {
+    console.error("Error fetching user count:", err);
+  }
 }
 
+/* -----------------------------
+   Session Status
+----------------------------- */
+
+async function updateSessionStatus() {
+  const statusText = document.getElementById("sessionStatusText");
+
+  try {
+    const res = await fetch("/api/session_status", { cache: "no-store" });
+    const data = await res.json();
+
+    statusText.classList.remove("text-yellow-400", "pulse-green", "pulse-red");
+
+    if (data.status === "valid") {
+      statusText.textContent = "VALID";
+      statusText.classList.add("pulse-green");
+    } else {
+      statusText.textContent = "INVALID";
+      statusText.classList.add("pulse-red");
+    }
+  } catch (err) {
+    console.error("Error checking session:", err);
+    statusText.textContent = "ERROR";
+    statusText.classList.add("pulse-red");
+  }
+}
+
+/* -----------------------------
+   Init
+----------------------------- */
 document.addEventListener("DOMContentLoaded", () => {
-    updateWhitelistedCount();
-    updateWebsiteUsersCount();
+  updateWhitelistedCount();
+  updateWebsiteUsersCount();
+  updateSessionStatus();
 });
 </script>
 {% endblock %}

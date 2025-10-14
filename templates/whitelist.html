@@ -60,9 +60,6 @@
 <!-- Add/Edit Modal -->
 <div id="userModal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-md p-2">
   <div id="modalContent" class="relative bg-blue-900/20 border border-blue-700 shadow-xl rounded-2xl w-full max-w-md p-4 sm:p-6 transform scale-90 opacity-0 transition-all duration-300">
-    
-    <!-- Close button -->
-    <button id="cancelBtnTop" class="absolute top-3 right-3 text-gray-300 hover:text-white transition text-xl">&times;</button>
 
     <h3 id="modalTitle" class="text-xl font-bold mb-4 text-[#64ffda] tracking-wide">Add User</h3>
     
@@ -104,40 +101,7 @@
   </div>
 </div>
 
-<style>
-/* ===== Responsive table rows for mobile ===== */
-@media (max-width: 640px) {
-  #whitelistTable tbody td {
-    display: block;
-    width: 100%;
-    text-align: right;
-    padding: 6px 8px;
-    position: relative;
-  }
-  #whitelistTable tbody td::before {
-    content: attr(data-label);
-    position: absolute;
-    left: 8px;
-    font-weight: bold;
-    color: #64ffda;
-    text-align: left;
-  }
-  #whitelistTable thead { display: none; }
-}
-
-/* Modal adjustments */
-@media (max-width: 480px) {
-  #modalContent { width: 95%; padding: 12px; }
-}
-
-/* Search/filter stacking */
-@media (max-width: 500px) {
-  #searchInput, #filterSelect { width: 100%; }
-}
-</style>
-
-<style>
-    
+<style>    
 /* Modal Animations */
 @keyframes fadeZoomIn {
   0% { opacity: 0; transform: scale(0.9); }
@@ -184,6 +148,30 @@
   z-index: 0;
 }
 
+/* Sci-Fi Ripple Effect */
+
+.glow-btn {
+  position: relative;
+  overflow: hidden; /* contain the ripple */
+}
+
+.glow-btn .ripple {
+  position: absolute;
+  border-radius: 50%;
+  transform: scale(0);
+  animation: ripple-animation 0.6s linear;
+  background: rgba(100, 255, 218, 0.4); /* neon cyan */
+  pointer-events: none;
+  z-index: 2;
+}
+
+@keyframes ripple-animation {
+  to {
+    transform: scale(4);
+    opacity: 0;
+  }
+}
+
 /* ===== Modal Hover Glow ===== */
 
 /* Modal buttons hover */
@@ -202,33 +190,61 @@
 }
 
 /* Floating input labels */
-.input-group { position: relative; }
-.input-group input, .input-group select {
-  width: 100%; padding: 12px 10px;
-  border-radius: 10px;
-  border: 1px solid rgba(100,255,218,0.3);
-  background: rgba(0, 10, 30, 0.4);
-  color: #e0fff9;
+.input-group {
+  position: relative;
+  margin-top: 1.5rem;
+}
+
+.input-group input,
+.input-group select {
+  width: 100%;
+  padding: 12px 10px;
+  background: rgba(10, 25, 47, 0.6);
+  border: 1px solid #1e3a8a;
+  border-radius: 8px;
+  color: #e0f2fe;
+  font-size: 0.95rem;
+  transition: all 0.25s ease;
+}
+
+.input-group input:focus,
+.input-group select:focus {
+  border-color: #64ffda;
+  box-shadow: 0 0 10px #64ffda55;
   outline: none;
-  transition: all 0.3s ease;
 }
+
+/* Floating label */
 .input-group label {
-  position: absolute; left: 12px; top: 50%;
+  position: absolute;
+  left: 12px;
+  top: 50%;
   transform: translateY(-50%);
-  color: #64ffda77;
-  pointer-events: none;
-  transition: all 0.2s ease;
+  color: #64ffda;
   font-size: 0.9rem;
+  pointer-events: none;
+  background: transparent;
+  transition: all 0.2s ease;
+  opacity: 0.8;
 }
+
+/* When input is focused or has text, lift the label */
 .input-group input:focus + label,
 .input-group input:not(:placeholder-shown) + label,
 .input-group select:focus + label,
 .input-group select:not([value=""]) + label {
-  top: -8px; font-size: 0.75rem; color: #64ffda;
+  top: -8px;
+  left: 10px;
+  font-size: 0.75rem;
+  color: #64ffda;
+  background-color: rgba(10, 25, 47, 1);
+  padding: 0 4px;
+  opacity: 1;
 }
-.input-group input:focus, .input-group select:focus {
-  border-color: #64ffda;
-  box-shadow: 0 0 8px #64ffda55, inset 0 0 4px #64ffda33;
+
+/* Make placeholders invisible to avoid overlap */
+.input-group input::placeholder {
+  color: transparent;
 }
 
 /* Table neon hover */
@@ -258,7 +274,6 @@
 <script>
 const modal = document.getElementById('userModal');
 const modalContent = document.getElementById('modalContent');
-const cancelBtnTop = document.getElementById('cancelBtnTop');
 const cancelBtnBottom = document.getElementById('cancelBtnBottom');
 const form = document.getElementById('userForm');
 
@@ -280,6 +295,13 @@ async function fetchUsers() {
 function openModal(title) {
   document.getElementById("modalTitle").innerText = title;
   modal.classList.remove("hidden");
+
+  // Remove leftover ripples before opening
+  document.querySelectorAll(".glow-btn .ripple").forEach(r => r.remove());
+
+  // Force reflow
+  void modalContent.offsetWidth;
+
   modalContent.classList.remove("modal-close");
   modalContent.classList.add("modal-open");
 }
@@ -350,10 +372,31 @@ function customConfirm(message){
 }
 
 // Close buttons
-cancelBtnTop.addEventListener('click', closeModal);
 cancelBtnBottom.addEventListener('click', closeModal);
-modal.addEventListener('click', e => { if(e.target===modal) closeModal(); });
 document.addEventListener('keydown', e => { if(e.key==='Escape') closeModal(); });
+
+let isSelectingText = false;
+
+// If starting a drag inside an input or textarea
+modalContent.addEventListener('mousedown', e => {
+  if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') {
+    isSelectingText = true;
+  }
+});
+
+// Reset after mouse release anywhere
+document.addEventListener('mouseup', () => {
+  isSelectingText = false;
+});
+
+// Only close modal if backdrop is clicked AND not selecting text
+modal.addEventListener('click', e => {
+  // Only close if backdrop itself was clicked
+  // and the click did NOT originate from an input inside modal
+  if (e.target === modal && !modal.contains(document.activeElement)) {
+    closeModal();
+  }
+});
 
 // Handle form submit → commits to GitHub
 form.addEventListener('submit', async e => {
@@ -450,30 +493,20 @@ async function removeUserObj(u) {
   }
 }
 
-function isMobile() {
-  return window.innerWidth <= 640; // adjust threshold as needed
-}
-
 function updateNotificationContainer() {
   const container = document.getElementById('notification-container');
-  if(isMobile()){
-    container.style.left = '1rem';
-    container.style.right = '1rem';
-    container.style.margin = '0 auto';
-    container.style.maxWidth = '95%';
-  } else {
-    container.style.left = '';
-    container.style.right = '';
-    container.style.margin = '';
-    container.style.maxWidth = '350px';
-  }
+  if (!container) return;
+
+  container.style.left = '';
+  container.style.right = '';
+  container.style.margin = '';
+  container.style.maxWidth = '350px';
 }
 
 window.addEventListener('resize', updateNotificationContainer);
 updateNotificationContainer();
 
 function adjustTableActions() {
-  if(!isMobile()) return;
   document.querySelectorAll('#whitelistBody td[data-label="Actions"]').forEach(td=>{
     td.style.textAlign = 'center';
     td.querySelectorAll('button').forEach(btn=> btn.style.width = '48%');
@@ -563,15 +596,22 @@ document.querySelectorAll('.removeBtn').forEach((btn, i) => {
 });
 
 document.querySelectorAll(".glow-btn").forEach(btn => {
-  const bg = window.getComputedStyle(btn).backgroundColor;
+  btn.addEventListener("click", e => {
+    const ripple = document.createElement("span");
+    ripple.classList.add("ripple");
 
-  // Simple function to darken RGB color
-  function darkenRGB(rgb, amount=0.7){
-    const nums = rgb.match(/\d+/g).map(Number);
-    return `rgb(${Math.floor(nums[0]*amount)}, ${Math.floor(nums[1]*amount)}, ${Math.floor(nums[2]*amount)})`;
-  }
+    // Calculate position of click inside button
+    const rect = btn.getBoundingClientRect();
+    const size = Math.max(rect.width, rect.height);
+    ripple.style.width = ripple.style.height = size + "px";
+    ripple.style.left = e.clientX - rect.left - size / 2 + "px";
+    ripple.style.top = e.clientY - rect.top - size / 2 + "px";
 
-  btn.style.setProperty('--glow-color', darkenRGB(bg));
+    btn.appendChild(ripple);
+
+    // Remove after animation
+    ripple.addEventListener("animationend", () => ripple.remove());
+  });
 });
 
 function applyButtonGlows() {
