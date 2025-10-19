@@ -1,0 +1,48 @@
+@keyframes fadeZoomIn {
+  0% {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+.animate-fadeZoomIn {
+  animation: fadeZoomIn 0.25s ease-out forwards;
+}
+
+/* Glowing border effect */
+.glow-border {
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 0 10px rgba(100, 255, 218, 0.15);
+}
+.glow-border::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: 0.5rem;
+  padding: 1px;
+  background: linear-gradient(90deg, #00aaff, #6b21a8, #00aaff);
+  background-size: 200% 200%;
+  animation: glowmove 3s linear infinite;
+
+  /* Proper masking for both WebKit & standard */
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+}
+.shadow-md {
+  box-shadow: 0 0 20px rgba(100, 255, 218, 0.25) !important;
+}
+
+@keyframes glowmove {
+  0% {
+    background-position: 0% 50%;
+  }
+  100% {
+    background-position: 200% 50%;
+  }
+}

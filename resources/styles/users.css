@@ -1,0 +1,177 @@
+/* =========================
+      MODAL ANIMATIONS
+========================= */
+
+@keyframes fadeZoomIn {
+  0% { opacity: 0; transform: scale(0.9); }
+  100% { opacity: 1; transform: scale(1); }
+}
+@keyframes fadeZoomOut {
+  0% { opacity: 1; transform: scale(1); }
+  100% { opacity: 0; transform: scale(0.9); }
+}
+
+.modal-open { animation: fadeZoomIn 0.25s ease-out forwards; }
+.modal-close { animation: fadeZoomOut 0.2s ease-in forwards; }
+
+/* =========================
+          BUTTONS
+========================= */
+.glow-btn {
+  position: relative;
+  padding: 0.5rem 1.25rem;
+  border-radius: 0.75rem;
+  font-weight: 500;
+  color: white;
+  border: 1px solid rgba(255,255,255,0.2);
+  transition: all 0.3s ease;
+}
+
+/* Hover glow */
+.glow-btn:hover {
+  box-shadow: 0 0 8px var(--glow-color), 0 0 20px var(--glow-color);
+}
+
+/* Glow pseudo-element */
+.glow-btn::before {
+  content: '';
+  position: absolute;
+  top: -6px;
+  left: -6px;
+  right: -6px;
+  bottom: -6px;
+  border-radius: inherit;
+  background: var(--glow-color); /* fill with glow color */
+  filter: blur(10px);           /* spread the glow softly */
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* =========================
+          RIPPLE
+========================= */
+
+.glow-btn {
+  position: relative;
+  overflow: hidden; /* contain the ripple */
+}
+
+.glow-btn .ripple {
+  position: absolute;
+  border-radius: 50%;
+  transform: scale(0);
+  animation: ripple-animation 0.6s linear;
+  background: rgba(100, 255, 218, 0.4); /* neon cyan */
+  pointer-events: none;
+  z-index: 2;
+}
+
+@keyframes ripple-animation {
+  to {
+    transform: scale(4);
+    opacity: 0;
+  }
+}
+
+/* =========================
+        MODAL GLOW
+========================= */
+
+/* Modal buttons hover */
+#userModal .glow-btn:hover {
+  transform: translateY(-2px) scale(1.05);
+}
+
+#modalContent {
+  transition: box-shadow 0.5s ease, transform 0.3s ease;
+  box-shadow: 0 0 20px #64ffda22, inset 0 0 15px #64ffda11;
+}
+
+#modalContent:hover {
+  box-shadow: 0 0 40px #64ffda55, inset 0 0 25px #64ffda33;
+  transform: translateY(-2px) scale(1.01);
+}
+
+/* Floating input labels */
+.input-group {
+  position: relative;
+  margin-top: 1.5rem;
+}
+
+.input-group input,
+.input-group select {
+  width: 100%;
+  padding: 12px 10px;
+  background: rgba(10, 25, 47, 0.6);
+  border: 1px solid #1e3a8a;
+  border-radius: 8px;
+  color: #e0f2fe;
+  font-size: 0.95rem;
+  transition: all 0.25s ease;
+}
+
+.input-group input:focus,
+.input-group select:focus {
+  border-color: #64ffda;
+  box-shadow: 0 0 10px #64ffda55;
+  outline: none;
+}
+
+/* =========================
+        FLOATING LABEL
+========================= */
+.input-group label {
+  position: absolute;
+  left: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #64ffda;
+  font-size: 0.9rem;
+  pointer-events: none;
+  background: transparent;
+  transition: all 0.2s ease;
+  opacity: 0.8;
+}
+
+/* When input is focused or has text, lift the label */
+.input-group input:focus + label,
+.input-group input:not(:placeholder-shown) + label,
+.input-group select:focus + label,
+.input-group select:not([value=""]) + label {
+  top: -8px;
+  left: 10px;
+  font-size: 0.75rem;
+  color: #64ffda;
+  background-color: rgba(10, 25, 47, 1);
+  padding: 0 4px;
+  opacity: 1;
+}
+
+/* Make placeholders invisible to avoid overlap */
+.input-group input::placeholder {
+  color: transparent;
+}
+
+/* Table neon hover */
+#whitelistTable tbody tr {
+  transition: all 0.2s ease;
+}
+#whitelistTable tbody tr:hover {
+  background: rgba(100,255,218,0.05);
+  transform: translateX(2px);
+}
+
+#notification-container {
+  position: fixed;
+  top: 1rem;
+  right: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  pointer-events: none;
+  max-width: 350px;
+  z-index: 9999;
+  backdrop-filter: none;
+}

@@ -1,0 +1,48 @@
+.glow-card {
+  box-shadow: 0 0 15px rgba(100, 255, 218, 0.1);
+  transition: transform 0.3s ease, background-color 0.3s ease,
+    box-shadow 0.3s ease;
+}
+
+.glow-card:hover {
+  transform: scale(1.02);
+  background-color: rgba(rgb(20, 51, 161));
+  box-shadow: 0 0 25px rgba(100, 255, 218, 0.4);
+}
+
+/* Pulsing animations */
+.pulse-green {
+  color: #00ff88 !important;
+  animation: pulseGreen 2s infinite;
+  text-shadow: 0 0 12px #00ff88;
+}
+
+.pulse-red {
+  color: #ff4444 !important;
+  animation: pulseRed 2s infinite;
+  text-shadow: 0 0 12px #ff4444;
+}
+
+@keyframes pulseGreen {
+  0%,
+  100% {
+    opacity: 1;
+    text-shadow: 0 0 8px #00ff88;
+  }
+  50% {
+    opacity: 0.7;
+    text-shadow: 0 0 20px #00ff88;
+  }
+}
+
+@keyframes pulseRed {
+  0%,
+  100% {
+    opacity: 1;
+    text-shadow: 0 0 8px #ff4444;
+  }
+  50% {
+    opacity: 0.7;
+    text-shadow: 0 0 20px #ff4444;
+  }
+}

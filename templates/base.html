@@ -5,46 +5,7 @@
   <title>{{ site_title }}</title>
   <link rel="icon" type="image/png" href="{{ site_icon }}">
   <script src="https://cdn.tailwindcss.com"></script>
-
-  <style>
-    @keyframes fadeZoomIn {
-      0% { opacity: 0; transform: scale(0.95); }
-      100% { opacity: 1; transform: scale(1); }
-    }
-    .animate-fadeZoomIn { animation: fadeZoomIn 0.25s ease-out forwards; }
-
-    /* Glowing border effect */
-    .glow-border {
-      position: relative;
-      overflow: hidden;
-    }
-    .glow-border::before {
-      content: "";
-      position: absolute;
-      inset: 0;
-      border-radius: 0.5rem;
-      padding: 1px;
-      background: linear-gradient(90deg, #00aaff, #6b21a8, #00aaff);
-      background-size: 200% 200%;
-      animation: glowmove 3s linear infinite;
-
-      /* Proper masking for both WebKit & standard */
-      -webkit-mask:
-        linear-gradient(#000 0 0) content-box,
-        linear-gradient(#000 0 0);
-      mask:
-        linear-gradient(#000 0 0) content-box, 
-        linear-gradient(#000 0 0);
-      -webkit-mask-composite: xor;
-      mask-composite: exclude;
-    }
-
-    @keyframes glowmove {
-      0% { background-position: 0% 50%; }
-      100% { background-position: 200% 50%; }
-    }
-  </style>
-</head>
+  <link rel="stylesheet" href="/resources/styles/base.css">
 
 <body class="bg-gradient-to-br from-[#030617] to-[#0a1a3a] text-white flex h-screen overflow-hidden">
 
@@ -86,12 +47,12 @@
                 {% else %}
                   bg-blue-900/40 hover:bg-blue-800/40 text-cyan-300
                 {% endif %}">
-        <span class="font-medium tracking-wide">User List</span>
+        <span class="font-medium tracking-wide">User Management</span>
       </a>
 
-      <a href="/wlmanagement"
+      <a href="/whitelist"
         class="block px-4 py-3 rounded-lg glow-border transition-colors duration-200
-                {% if '/wlmanagement' in request.path %}
+                {% if '/whitelist' in request.path %}
                   bg-blue-600/60 text-white shadow-md
                 {% else %}
                   bg-blue-900/40 hover:bg-blue-800/40 text-cyan-300
@@ -106,17 +67,6 @@
     </div>
   </aside>
 
-  <style>
-    .glow-border {
-      box-shadow: 0 0 10px rgba(100, 255, 218, 0.15);
-    }
-
-    /* Optional: emphasize active button glow */
-    .shadow-md {
-      box-shadow: 0 0 20px rgba(100, 255, 218, 0.25) !important;
-    }
-  </style>
-
   <!-- Main Content -->
   <main class="flex-1 p-6 lg:p-10 overflow-y-auto text-gray-100">
     {% block content %}
@@ -127,59 +77,10 @@
   document.addEventListener("DOMContentLoaded", () => {
     if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
       document.documentElement.innerHTML = `
+        <head>
+          <link rel="stylesheet" href="/static/css/glitch.css">
+        </head>
         <body style="background:white;display:flex;align-items:center;justify-content:center;height:100vh;margin:0;overflow:hidden;">
-          <style>
-            @keyframes glitch {
-              0% { clip-path: inset(0 0 80% 0); transform: translate(0); }
-              10% { clip-path: inset(10% 0 50% 0); transform: translate(-2px, -2px); }
-              20% { clip-path: inset(20% 0 40% 0); transform: translate(2px, 2px); }
-              30% { clip-path: inset(10% 0 60% 0); transform: translate(-1px, 1px); }
-              40% { clip-path: inset(40% 0 20% 0); transform: translate(1px, -1px); }
-              50% { clip-path: inset(50% 0 30% 0); transform: translate(-3px, 2px); }
-              60% { clip-path: inset(20% 0 40% 0); transform: translate(3px, -2px); }
-              70% { clip-path: inset(0 0 80% 0); transform: translate(-1px, 1px); }
-              80% { clip-path: inset(30% 0 30% 0); transform: translate(1px, -1px); }
-              90% { clip-path: inset(10% 0 50% 0); transform: translate(-2px, 0); }
-              100% { clip-path: inset(0 0 80% 0); transform: translate(0); }
-            }
-            .glitch-container {
-              position: relative;
-              font-family: "Orbitron", monospace;
-              font-size: 2rem;
-              color: #000;
-              text-transform: uppercase;
-              letter-spacing: 3px;
-              animation: glitch 2s infinite;
-            }
-            .glitch-container::before,
-            .glitch-container::after {
-              content: attr(data-text);
-              position: absolute;
-              left: 0;
-              width: 100%;
-            }
-            .glitch-container::before {
-              color: #00faff;
-              transform: translate(-2px, -2px);
-              mix-blend-mode: lighten;
-            }
-            .glitch-container::after {
-              color: #ff007b;
-              transform: translate(2px, 2px);
-              mix-blend-mode: lighten;
-            }
-            @keyframes flicker {
-              0%, 18%, 22%, 25%, 53%, 57%, 100% {
-                opacity: 1;
-              }
-              20%, 24%, 55% {
-                opacity: 0;
-              }
-            }
-            .glitch-container {
-              animation: glitch 1.5s infinite, flicker 3s infinite;
-            }
-          </style>
           <div class="glitch-container" data-text="Device not supported.">Device not supported.</div>
         </body>
       `;

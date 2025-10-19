@@ -1,0 +1,90 @@
+/* =========================
+          MAIN
+========================= */
+
+body {
+  background: radial-gradient(circle at top, #0a0a12 0%, #050507 100%);
+  color: #e5e7eb;
+  font-family: "Inter", sans-serif;
+}
+.glow {
+  box-shadow: 0 0 20px rgba(100, 255, 218, 0.25);
+}
+.glow-text {
+  text-shadow: 0 0 8px rgba(100, 255, 218, 0.5);
+}
+input:focus {
+  outline: none;
+  box-shadow: 0 0 10px #64ffda;
+}
+button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.fade-in {
+  animation: fadeIn 0.3s ease forwards;
+}
+.fade-out {
+  animation: fadeOut 0.3s ease forwards;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+@keyframes fadeOut {
+  from {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  to {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+}
+
+/* =========================
+        COOKIE NOTE
+========================= */
+
+.cookie-note {
+  position: fixed;
+  bottom: 15px;
+  right: 20px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  color: #aaa;
+  font-size: 0.75rem;
+  padding: 10px 14px;
+  border-radius: 8px;
+  max-width: 240px;
+  line-height: 1.3;
+  text-align: left;
+  backdrop-filter: blur(6px);
+  opacity: 0;
+  transform: translateY(8px);
+  transition: opacity 0.8s ease, transform 0.8s ease;
+  pointer-events: none; /* avoids accidental clicks */
+  z-index: 50;
+}
+
+.cookie-note.show {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+@media (max-width: 600px) {
+  .cookie-note {
+    right: 10px;
+    bottom: 10px;
+    max-width: 200px;
+    font-size: 0.7rem;
+  }
+}

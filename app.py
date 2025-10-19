@@ -11,7 +11,7 @@ from functools import wraps
 import platform
 import uuid
 
-app = Flask(__name__)
+app = Flask(__name__, static_folder='resources', static_url_path='/resources')
 
 # ==========================================================
 # Configuration
@@ -108,13 +108,13 @@ def dashboard():
 @app.route("/users")
 @login_required
 def users_page():
-    return render_template("users.html")
-
-@app.route("/wlmanagement")
-@login_required
-def wlmanagement():
     users = fetch_whitelist()
-    return render_template("whitelist.html", users=users)
+    return render_template("users.html", users=users)
+
+@app.route("/whitelist")
+@login_required
+def whitelist_management():
+    return render_template("whitelist.html")
 
 # ==========================================================
 # API ROUTES

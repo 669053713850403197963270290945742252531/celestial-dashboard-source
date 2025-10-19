@@ -1,88 +1,485 @@
 {% extends "base.html" %}
 
 {% block content %}
-<div class="flex items-center justify-between mb-6">
-  <h2 class="text-3xl font-bold">User List</h2>
-  <button onclick="openModal()" class="bg-blue-600 text-white px-4 py-2 rounded-lg shadow hover:bg-blue-500 transition">
-    + Add User
-  </button>
+
+<link rel="stylesheet" href="/resources/styles/users.css">
+
+<div id="custom-confirm-container" class="fixed inset-0 flex items-center justify-center bg-black/50 backdrop-blur-sm hidden z-50">
+  <div id="custom-confirm-box" class="bg-blue-900/20 border border-blue-700 rounded-2xl p-6 w-80 max-w-full text-center transform scale-90 opacity-0 transition-all duration-200">
+    <p id="custom-confirm-message" class="text-[#64ffda] font-bold mb-4"></p>
+    <div class="flex justify-center gap-4 flex-wrap">
+      <button id="confirm-yes" class="glow-btn px-4 py-2 bg-green-600 hover:bg-green-500 text-white rounded-lg min-w-[80px]">Yes</button>
+      <button id="confirm-no" class="glow-btn px-4 py-2 bg-red-600 hover:bg-red-500 text-white rounded-lg min-w-[80px]">No</button>
+    </div>
+  </div>
 </div>
 
-<!-- User Table -->
-<div class="bg-blue-800/60 shadow-lg rounded-xl p-6 border border-blue-700">
-  <table class="w-full border-collapse">
-    <thead>
-      <tr class="bg-blue-700 text-left">
-        <th class="p-3">Username</th>
-        <th class="p-3">Identifier</th>
-        <th class="p-3">Status</th>
-        <th class="p-3">Actions</th>
+<div id="notification-container" class="fixed top-4 right-4 flex flex-col space-y-2 z-50 pointer-events-none max-w-xs"></div>
+
+<!-- Header + Add button -->
+<div class="flex flex-col sm:flex-row sm:items-center justify-between mb-6 gap-2 sm:gap-0">
+  <h2 class="text-3xl sm:text-3xl font-bold text-[#64ffda] tracking-wide">User Management</h2>
+  <button onclick="openAddModal()" class="glow-btn px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-500 text-white shadow-lg transition">+ Add User</button>
+</div>
+
+<!-- Search + Filter -->
+<div class="mb-4 flex flex-col sm:flex-row sm:items-center gap-2">
+  <input type="text" id="searchInput" placeholder="Search..." 
+         class="flex-1 p-3 rounded-lg bg-blue-950/30 border border-blue-700 text-white focus:outline-none focus:ring-2 focus:ring-[#64ffda] transition">
+  <select id="filterSelect" class="p-3 rounded-lg bg-blue-950/30 border border-blue-700 text-white focus:outline-none focus:ring-2 focus:ring-[#64ffda] transition">
+    <option value="Identifier">Identifier</option>
+    <option value="HWID">HWID</option>
+    <option value="Rank">Rank</option>
+    <option value="DiscordId">Discord ID</option>
+    <option value="JoinDate">Join Date</option>
+  </select>
+</div>
+
+<!-- Whitelist Table -->
+<div class="bg-blue-900/20 border border-blue-700 shadow-xl rounded-2xl overflow-x-auto p-4 sm:p-6">
+  <table id="whitelistTable" class="w-full text-left border-collapse">
+    <thead class="bg-blue-800/60 hidden sm:table-header-group">
+      <tr>
+        <th class="p-3 text-[#64ffda]">Identifier</th>
+        <th class="p-3 text-[#64ffda]">HWID</th>
+        <th class="p-3 text-[#64ffda]">Discord ID</th>
+        <th class="p-3 text-[#64ffda]">Rank</th>
+        <th class="p-3 text-[#64ffda]">Join Date</th>
+        <th class="p-3 text-[#64ffda]">Key</th>
+        <th class="p-3 text-[#64ffda]">Notes</th>
+        <th class="p-3 text-[#64ffda]">Actions</th>
       </tr>
     </thead>
-    <tbody>
-      <tr class="border-t border-blue-700">
-        <td class="p-3">PlayerOne</td>
-        <td class="p-3">HWID12345</td>
-        <td class="p-3"><span class="bg-green-700/70 px-2 py-1 rounded">Whitelisted</span></td>
-        <td class="p-3 space-x-2">
-          <button class="bg-yellow-600 text-white px-3 py-1 rounded hover:bg-yellow-500 transition">Edit</button>
-          <button class="bg-red-600 text-white px-3 py-1 rounded hover:bg-red-500 transition">Remove</button>
-        </td>
-      </tr>
+    <tbody id="whitelistBody">
+      <!-- Dynamic rows -->
     </tbody>
   </table>
 </div>
 
-<!-- Add User Modal -->
-<div id="addUserModal" class="fixed inset-0 bg-black/60 backdrop-blur-sm hidden items-center justify-center z-50">
-  <div id="addUserContent" class="bg-blue-900 rounded-xl shadow-xl w-96 p-6 border border-blue-700 opacity-0 scale-95">
-    <h3 class="text-xl font-bold mb-4">Add User</h3>
-    <form class="space-y-4">
-      <input type="text" placeholder="Username" class="w-full p-3 border border-blue-600 rounded-lg bg-blue-950/50 text-white focus:outline-none focus:ring-2 focus:ring-blue-400">
-      <input type="text" placeholder="Identifier (HWID, ID, etc.)" class="w-full p-3 border border-blue-600 rounded-lg bg-blue-950/50 text-white focus:outline-none focus:ring-2 focus:ring-blue-400">
-      <div class="flex justify-end space-x-2">
-        <button type="button" onclick="closeModal()" class="px-4 py-2 rounded-lg bg-gray-600 hover:bg-gray-500 transition">Cancel</button>
-        <button type="submit" class="px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-500 transition">Add</button>
+<!-- Pagination -->
+<div id="pagination" class="flex flex-wrap justify-end mt-4 gap-2"></div>
+
+<!-- Add/Edit Modal -->
+<div id="userModal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-md p-2">
+  <div id="modalContent" class="relative bg-blue-900/20 border border-blue-700 shadow-xl rounded-2xl w-full max-w-md p-4 sm:p-6 transform scale-90 opacity-0 transition-all duration-300">
+
+    <h3 id="modalTitle" class="text-xl font-bold mb-4 text-[#64ffda] tracking-wide">Add User</h3>
+    
+    <div id="formErrors" class="mb-2 text-red-400 text-sm hidden"></div>
+
+    <form id="userForm" autocomplete="off" class="space-y-4">
+      <div class="input-group">
+        <input type="text" name="Identifier" placeholder="Identifier" required>
+        <label>Identifier</label>
+      </div>
+      <div class="input-group">
+        <input type="text" name="HWID" placeholder="HWID" required>
+        <label>HWID</label>
+      </div>
+      <div class="input-group">
+        <input type="text" name="DiscordId" placeholder="Discord ID" required>
+        <label>Discord ID</label>
+      </div>
+      <div class="input-group">
+        <select name="Rank" required>
+          <option value="" disabled selected>Select Rank</option>
+          <option value="User">User</option>
+          <option value="Moderator">Moderator</option>
+          <option value="Admin">Admin</option>
+          <option value="Owner">Owner</option>
+        </select>
+        <label>Rank</label>
+      </div>
+      <div class="input-group">
+        <input type="text" name="Notes" placeholder="Notes (optional)">
+        <label>Notes</label>
+      </div>
+
+      <div class="flex flex-col sm:flex-row justify-end space-y-2 sm:space-y-0 sm:space-x-2 mt-2">
+        <button type="button" class="glow-btn bg-gray-600 hover:bg-gray-500 px-4 py-2 rounded-lg transition min-w-[80px]" id="cancelBtnBottom">Cancel</button>
+        <button type="submit" class="glow-btn bg-blue-600 hover:bg-blue-500 px-4 py-2 rounded-lg transition min-w-[80px]">Save</button>
       </div>
     </form>
   </div>
 </div>
 
 <script>
-const modal = document.getElementById("addUserModal");
-const content = document.getElementById("addUserContent");
+const modal = document.getElementById('userModal');
+const modalContent = document.getElementById('modalContent');
+const cancelBtnBottom = document.getElementById('cancelBtnBottom');
+const form = document.getElementById('userForm');
 
-// Open modal with fade/zoom
-function openModal() {
-  modal.classList.remove("hidden");
-  modal.classList.add("flex");
+let users = [];
+let currentPage = 1;
+const rowsPerPage = 10;
 
-  content.classList.remove("animate-fadeZoomOut");
-  void content.offsetWidth; // trigger reflow
-  content.classList.add("animate-fadeZoomIn");
+async function fetchUsers() {
+  try {
+    const res = await fetch("/api/whitelist");
+    const data = await res.json();
+    if(data.success) {
+      users = data.users.map(u => ({ ...u, whitelisted: u.whitelisted ?? true }));
+      renderTable();
+    } else { window.notify.error("Failed to fetch whitelist: "+data.error); }
+  } catch(e) { console.error(e); window.notify.error("Error fetching whitelist"); }
 }
 
-// Close modal with fade/zoom
-function closeModal() {
-  content.classList.remove("animate-fadeZoomIn");
-  void content.offsetWidth;
-  content.classList.add("animate-fadeZoomOut");
+function openModal(title) {
+  document.getElementById("modalTitle").innerText = title;
+  modal.classList.remove("hidden");
 
-  content.addEventListener("animationend", () => {
+  // Remove leftover ripples before opening
+  document.querySelectorAll(".glow-btn .ripple").forEach(r => r.remove());
+
+  // Force reflow
+  void modalContent.offsetWidth;
+
+  modalContent.classList.remove("modal-close");
+  modalContent.classList.add("modal-open");
+}
+
+function closeModal() {
+  modalContent.classList.remove("modal-open");
+  modalContent.classList.add("modal-close");
+  modalContent.addEventListener("animationend", () => {
     modal.classList.add("hidden");
-    modal.classList.remove("flex");
-    content.style.opacity = 0;
-    content.style.transform = 'scale(0.95)';
   }, { once: true });
 }
 
-// Close modal when clicking outside content
-modal.addEventListener("click", (e) => {
-  if(e.target === modal) closeModal();
+function openAddModal() {
+  form.reset();
+  form.dataset.editIdentifier = "";
+  openModal("Add User");
+}
+
+function editUserObj(u) {
+  form.Identifier.value = u.Identifier;
+  form.HWID.value = u.HWID;
+  form.DiscordId.value = u.DiscordId;
+  form.Rank.value = u.Rank;
+  form.Notes.value = u.Notes||"";
+  form.dataset.editIdentifier = u.Identifier;
+  openModal("Edit User");
+}
+
+function customConfirm(message){
+  return new Promise(resolve=>{
+    const container = document.getElementById('custom-confirm-container');
+    const box = document.getElementById('custom-confirm-box');
+    const msg = document.getElementById('custom-confirm-message');
+    const yesBtn = document.getElementById('confirm-yes');
+    const noBtn = document.getElementById('confirm-no');
+
+    msg.innerText = message;
+    container.classList.remove('hidden');
+
+    // Position center dynamically
+    const vw = window.innerWidth;
+    const vh = window.innerHeight;
+    box.style.top = `${vh/2 - box.offsetHeight/2}px`;
+    box.style.left = `${vw/2 - box.offsetWidth/2}px`;
+
+    requestAnimationFrame(()=>{
+      box.style.opacity = 1;
+      box.style.transform = 'scale(1)';
+    });
+
+    function cleanUp(result){
+      box.style.opacity = 0;
+      box.style.transform = 'scale(0.9)';
+      box.addEventListener('transitionend', ()=>{
+        container.classList.add('hidden');
+      }, { once: true });
+      yesBtn.removeEventListener('click', onYes);
+      noBtn.removeEventListener('click', onNo);
+      resolve(result);
+    }
+
+    function onYes(){ cleanUp(true); }
+    function onNo(){ cleanUp(false); }
+
+    yesBtn.addEventListener('click', onYes);
+    noBtn.addEventListener('click', onNo);
+  });
+}
+
+// Close buttons
+cancelBtnBottom.addEventListener('click', closeModal);
+document.addEventListener('keydown', e => { if(e.key==='Escape') closeModal(); });
+
+let isSelectingText = false;
+
+// If starting a drag inside an input or textarea
+modalContent.addEventListener('mousedown', e => {
+  if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') {
+    isSelectingText = true;
+  }
 });
-</script>
 
-<script>
-</script>
+// Reset after mouse release anywhere
+document.addEventListener('mouseup', () => {
+  isSelectingText = false;
+});
 
+// Only close modal if backdrop is clicked AND not selecting text
+modal.addEventListener('click', e => {
+  // Only close if backdrop itself was clicked
+  // and the click did NOT originate from an input inside modal
+  if (e.target === modal && !modal.contains(document.activeElement)) {
+    closeModal();
+  }
+});
+
+// Handle form submit → commits to GitHub
+form.addEventListener('submit', async e => {
+  e.preventDefault();
+  const isEditing = !!form.dataset.editIdentifier;
+  const existing = isEditing ? users.find(u=>u.Identifier===form.dataset.editIdentifier):null;
+
+  const newUser = {
+    Identifier: form.Identifier.value.trim(),
+    HWID: form.HWID.value.trim(),
+    DiscordId: form.DiscordId.value.trim(),
+    Rank: form.Rank.value,
+    JoinDate: isEditing?(existing?.JoinDate || new Date().toLocaleString()):new Date().toLocaleString(),
+    Key: isEditing?(existing?.Key || ""):"",
+    Notes: form.Notes.value.trim() || null
+  };
+
+  // Validation
+  let hasError = false;
+  if(newUser.Identifier.length < 3 || newUser.Identifier.length > 20) {
+    window.notify.error("Identifier must be 3-20 characters");
+    hasError = true;
+  }
+  if(newUser.HWID.length !== 64) {
+    window.notify.error("HWID must be 64 characters (SHA-256)");
+    hasError = true;
+  }
+  if(!/^\d{17,20}$/.test(newUser.DiscordId)) {
+    window.notify.error("Discord ID must be 17-20 digits");
+    hasError = true;
+  }
+
+  const others = isEditing ? users.filter(u=>u.Identifier !== form.dataset.editIdentifier) : users;
+  if(others.some(u=>u.Identifier === newUser.Identifier)) {
+    window.notify.error("Identifier already exists");
+    hasError = true;
+  }
+  if(others.some(u=>u.HWID === newUser.HWID)) {
+    window.notify.error("HWID already exists");
+    hasError = true;
+  }
+  if(others.some(u=>u.DiscordId === newUser.DiscordId)) {
+    window.notify.error("Discord ID already exists");
+    hasError = true;
+  }
+
+  if(hasError) return;
+
+  const apiURL = isEditing ? "/api/edit_user" : "/api/add_user";
+  const payload = isEditing ? { identifier: form.dataset.editIdentifier, user: newUser } : newUser;
+
+  try {
+    const res = await fetch(apiURL, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload)
+    });
+    const data = await res.json();
+    if(data.success){
+      await fetchUsers();
+      closeModal();
+      window.notify.success("User has been successfully " + (isEditing ? "updated" : "added"));
+    } else {
+      // API returned error
+      data.error.split("\n").forEach(errMsg => window.notify.error(errMsg));
+    }
+  } catch(err){
+    console.error(err);
+    window.notify.error("Error saving user");
+  }
+});
+
+// Remove user
+async function removeUserObj(u) {
+  const confirmed = await customConfirm(`Delete ${u.Identifier}?`);
+  if(!confirmed) return;
+
+  try {
+    const res = await fetch("/api/remove_user", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ identifier: u.Identifier })
+    });
+    const data = await res.json();
+    if(data.success){
+      await fetchUsers();
+      notify.success(`User ${u.Identifier} deleted!`);
+    } else {
+      notify.error(`Failed to delete: ${data.error}`);
+    }
+  } catch(err){
+    console.error(err);
+    notify.error("Error deleting user");
+  }
+}
+
+function updateNotificationContainer() {
+  const container = document.getElementById('notification-container');
+  if (!container) return;
+
+  container.style.left = '';
+  container.style.right = '';
+  container.style.margin = '';
+  container.style.maxWidth = '350px';
+}
+
+window.addEventListener('resize', updateNotificationContainer);
+updateNotificationContainer();
+
+function adjustTableActions() {
+  document.querySelectorAll('#whitelistBody td[data-label="Actions"]').forEach(td=>{
+    td.style.textAlign = 'center';
+    td.querySelectorAll('button').forEach(btn=> btn.style.width = '48%');
+  });
+}
+
+window.addEventListener('resize', adjustTableActions);
+adjustTableActions();
+
+// Check URL params on page load
+function handleURLAction() {
+  const params = new URLSearchParams(window.location.search);
+  const action = params.get('action');
+
+  if(action === 'add') {
+    openAddModal(); // opens the Add User modal
+  }
+}
+
+// Call after everything else is initialized
+document.addEventListener('DOMContentLoaded', handleURLAction);
+
+// Render table
+function renderTable() {
+  const tbody = document.getElementById('whitelistBody');
+  tbody.innerHTML = "";
+
+  const query = document.getElementById('searchInput').value.toLowerCase();
+  const filterBy = document.getElementById('filterSelect').value;
+  const filtered = users.filter(u => {
+    const v = u[filterBy] ? u[filterBy].toString().toLowerCase() : '';
+    return v.includes(query);
+  });
+
+  const start = (currentPage - 1) * rowsPerPage,
+        end = start + rowsPerPage;
+
+  filtered.slice(start, end).forEach(u => {
+    const tr = document.createElement('tr');
+    tr.className = "border-t border-blue-700 hover:bg-[#64ffda11] transition-all";
+    tr.innerHTML = `
+      <td data-label="Identifier" class="p-3">${u.Identifier}</td>
+      <td data-label="HWID" class="p-3">${u.HWID}</td>
+      <td data-label="Discord ID" class="p-3">${u.DiscordId}</td>
+      <td data-label="Rank" class="p-3">${u.Rank}</td>
+      <td data-label="Join Date" class="p-3">${u.JoinDate}</td>
+      <td data-label="Key" class="p-3">${u.Key||''}</td>
+      <td data-label="Notes" class="p-3">${u.Notes||''}</td>
+      <td data-label="Actions" class="p-3 space-x-2">
+        <button class="editBtn glow-btn bg-yellow-600 px-3 py-1 rounded hover:bg-yellow-500 text-white transition min-w-[60px]">Edit</button>
+        <button class="removeBtn glow-btn bg-red-600 px-3 py-1 rounded hover:bg-red-500 text-white transition min-w-[60px]">Remove</button>
+      </td>
+    `;
+    tbody.appendChild(tr);
+
+    // Attach handlers **here, after element exists**
+    tr.querySelector('.editBtn').addEventListener('click', () => editUserObj(u));
+    tr.querySelector('.removeBtn').addEventListener('click', () => removeUserObj(u));
+  });
+
+  applyButtonGlows();
+  renderPagination(filtered.length);
+}
+
+
+// Pagination
+function renderPagination(totalItems){
+  const pagination = document.getElementById('pagination');
+  pagination.innerHTML="";
+  const totalPages = Math.ceil(totalItems/rowsPerPage);
+  for(let i=1;i<=totalPages;i++){
+    const btn = document.createElement('button');
+    btn.innerText=i;
+    btn.className=`px-3 py-1 rounded ${i===currentPage?'bg-blue-600':'bg-blue-500'} text-white`;
+    btn.onclick=()=>{ currentPage=i; renderTable(); };
+    pagination.appendChild(btn);
+  }
+}
+
+// Attach edit/remove handlers dynamically
+document.querySelectorAll('.editBtn').forEach((btn, i) => {
+  btn.onclick = () => editUserObj(filtered[start + i]);
+});
+
+document.querySelectorAll('.removeBtn').forEach((btn, i) => {
+  btn.onclick = () => removeUserObj(filtered[start + i]);
+});
+
+document.querySelectorAll(".glow-btn").forEach(btn => {
+  btn.addEventListener("click", e => {
+    const ripple = document.createElement("span");
+    ripple.classList.add("ripple");
+
+    // Calculate position of click inside button
+    const rect = btn.getBoundingClientRect();
+    const size = Math.max(rect.width, rect.height);
+    ripple.style.width = ripple.style.height = size + "px";
+    ripple.style.left = e.clientX - rect.left - size / 2 + "px";
+    ripple.style.top = e.clientY - rect.top - size / 2 + "px";
+
+    btn.appendChild(ripple);
+
+    // Remove after animation
+    ripple.addEventListener("animationend", () => ripple.remove());
+  });
+});
+
+function applyButtonGlows() {
+  document.querySelectorAll(".glow-btn").forEach(btn => {
+    let bg = window.getComputedStyle(btn).backgroundColor;
+
+    // Tailwind fallback colors (safeguard for dynamic elements)
+    if (bg === "rgba(0, 0, 0, 0)" || bg === "transparent") {
+      if (btn.classList.contains("bg-red-600")) bg = "rgb(220, 38, 38)";
+      else if (btn.classList.contains("bg-yellow-600")) bg = "rgb(202, 138, 4)";
+      else if (btn.classList.contains("bg-blue-600")) bg = "rgb(37, 99, 235)";
+      else if (btn.classList.contains("bg-gray-600")) bg = "rgb(75, 85, 99)";
+      else bg = "rgb(100, 255, 218)"; // default cyan fallback
+    }
+
+    // Slightly darken it for glow
+    function darkenRGB(rgb, amount = 0.7) {
+      const nums = rgb.match(/\d+/g).map(Number);
+      return `rgb(${Math.floor(nums[0]*amount)}, ${Math.floor(nums[1]*amount)}, ${Math.floor(nums[2]*amount)})`;
+    }
+
+    // Set CSS variable for hover glow
+    btn.style.setProperty("--glow-color", darkenRGB(bg));
+  });
+}
+
+
+applyButtonGlows();
+renderTable();
+
+
+// Search/filter listeners
+document.getElementById('searchInput').addEventListener('input', ()=>{ currentPage=1; renderTable(); });
+document.getElementById('filterSelect').addEventListener('change', ()=>{ currentPage=1; renderTable(); });
+
+// Fetch initially
+fetchUsers();
+</script>
 {% endblock %}
