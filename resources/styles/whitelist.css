@@ -1,0 +1,290 @@
+#jsonEditor {
+  width: 100%;
+  height: 520px;
+  border-radius: 0.5rem;
+  overflow: hidden;
+}
+
+.glow-card {
+  box-shadow: 0 0 20px rgba(100, 255, 218, 0.1);
+}
+.glow-text {
+  text-shadow: 0 0 10px rgba(100, 255, 218, 0.5);
+}
+
+/* Diff UI */
+.diff-summary {
+  margin-bottom: 8px;
+  color: #cfeeed;
+}
+.diff-pill {
+  display: inline-block;
+  padding: 4px 8px;
+  border-radius: 99px;
+  font-weight: 600;
+  margin-right: 8px;
+}
+.diff-add {
+  background: rgba(34, 197, 94, 0.12);
+  color: #6ef2a3;
+  border: 1px solid rgba(34, 197, 94, 0.18);
+}
+.diff-rem {
+  background: rgba(239, 68, 68, 0.08);
+  color: #ff9a9a;
+  border: 1px solid rgba(239, 68, 68, 0.12);
+}
+
+.diff-details {
+  margin-top: 6px;
+  color: #9fe7d9;
+}
+.diff-list {
+  max-height: 220px;
+  overflow: auto;
+  background: rgba(10, 20, 30, 0.45);
+  border: 1px solid rgba(100, 255, 218, 0.06);
+  padding: 8px;
+  border-radius: 8px;
+}
+.diff-item {
+  padding: 6px 8px;
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  border-bottom: 1px dashed rgba(255, 255, 255, 0.03);
+}
+.diff-item:last-child {
+  border-bottom: none;
+}
+.diff-item button {
+  background: transparent;
+  border: none;
+  color: #64ffda;
+  cursor: pointer;
+  font-weight: 600;
+}
+.diff-toggle {
+  cursor: pointer;
+  color: #64ffda;
+  font-weight: 700;
+  margin-left: 8px;
+}
+
+/* Search bar */
+.search-row {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  margin-bottom: 10px;
+}
+.search-input {
+  flex: 1;
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: linear-gradient(180deg, rgba(7,18,35,0.7), rgba(3,10,20,0.85));
+  border: 1px solid rgba(100,255,218,0.15);
+  color: #eafffa;
+  font-family: 'Consolas', monospace;
+  transition: all 0.25s ease;
+  box-shadow: 0 0 8px rgba(100,255,218,0.05);
+  background-image: repeating-linear-gradient(
+    0deg,
+    transparent,
+    transparent 2px,
+    rgba(100,255,218,0.03) 3px
+  );
+}
+.search-input:focus {
+  border-color: #64ffda;
+  box-shadow: 0 0 12px rgba(100,255,218,0.3), inset 0 0 10px rgba(100,255,218,0.15);
+  outline: none;
+}
+.search-controls button {
+  margin-left: 6px;
+  padding: 8px 10px;
+  border-radius: 8px;
+  background: transparent;
+  border: 1px solid rgba(100, 255, 218, 0.06);
+  color: #cfeeed;
+  cursor: pointer;
+}
+
+/* --- Ripple Button Effects --- */
+.ripple-target {
+  position: relative;
+  overflow: hidden;         /* clip ripple inside element */
+  display: inline-flex;     /* makes label behave like button */
+  align-items: center;
+  justify-content: center;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.ripple {
+  position: absolute;
+  border-radius: 50%;
+  transform: scale(0);
+  pointer-events: none;
+  background: radial-gradient(circle, rgba(100,255,218,0.24), rgba(100,255,218,0.08));
+  box-shadow: 0 0 18px rgba(100,255,218,0.08), inset 0 0 6px rgba(100,255,218,0.03);
+  opacity: 0.95;
+  animation: rippleExpand 540ms cubic-bezier(.2,.9,.2,1);
+}
+
+/* subtler fade out */
+@keyframes rippleExpand {
+  0% {
+    transform: scale(0.02);
+    opacity: 0.95;
+  }
+  60% {
+    transform: scale(1);
+    opacity: 0.5;
+  }
+  100% {
+    transform: scale(1.15);
+    opacity: 0;
+  }
+}
+
+/* Hover glow kept separate, still safe */
+.ripple-target:hover {
+  box-shadow: 0 0 12px rgba(100,255,218,0.12);
+}
+
+/* Monaco highlight style (inlineClassName) */
+.monaco-highlight {
+  background-color: rgba(100, 255, 218, 0.25);
+  border-radius: 3px;
+}
+
+/* small responsive */
+@media (max-width: 640px) {
+  #jsonEditor {
+    height: 420px;
+  }
+}
+
+/* decoration for Monaco highlights */
+.monaco-editor .highlighted-text {
+  background-color: rgba(100,255,218,0.3) !important;
+  border-radius: 3px;
+  box-shadow: 0 0 6px rgba(100,255,218,0.4);
+}
+
+/* === Sci-Fi Modal Backdrop === */
+.import-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  background: radial-gradient(circle at center, rgba(5, 15, 25, 0.9), rgba(0, 0, 0, 0.85));
+  backdrop-filter: blur(6px) saturate(150%);
+  z-index: 90;
+  animation: backdropFade 0.25s ease forwards;
+  pointer-events: all;
+}
+@keyframes backdropFade {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+/* === Modal Container === */
+.import-modal {
+  position: relative;
+  width: 100%;
+  max-width: 740px;
+  padding: 22px;
+  border-radius: 14px;
+  background: linear-gradient(180deg, rgba(8,16,30,0.95), rgba(2,8,18,0.98));
+  border: 1px solid rgba(100,255,218,0.1);
+  box-shadow:
+    0 0 40px rgba(0,255,200,0.1),
+    inset 0 0 25px rgba(100,255,218,0.05);
+  color: #d8fff8;
+  overflow: hidden;
+  transform: translateY(15px) scale(0.97);
+  opacity: 0;
+  transition: all 0.3s ease;
+  z-index: 100; /* ensure it's above overlays */
+}
+.import-modal.show {
+  transform: translateY(0) scale(1);
+  opacity: 1;
+}
+/* prevent pseudo-elements from blocking buttons */
+.import-modal::before,
+.import-modal::after {
+  pointer-events: none;
+}
+
+/* === Animated Grid Overlay === */
+.import-modal::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-image: linear-gradient(rgba(100,255,218,0.05) 1px, transparent 1px),
+                    linear-gradient(90deg, rgba(100,255,218,0.05) 1px, transparent 1px);
+  background-size: 28px 28px;
+  opacity: 0.35;
+  animation: gridScroll 8s linear infinite;
+  pointer-events: none;
+}
+@keyframes gridScroll {
+  from { background-position: 0 0; }
+  to { background-position: 28px 28px; }
+}
+
+/* === Modal Glow Border Sweep === */
+.import-modal::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: 14px;
+  background: linear-gradient(120deg, rgba(100,255,218,0.12), transparent, rgba(100,255,218,0.12));
+  opacity: 0;
+  animation: glowSweep 3s ease-in-out infinite;
+}
+@keyframes glowSweep {
+  0%,100% { opacity: 0; }
+  50% { opacity: 0.2; }
+}
+
+/* === Modal Content === */
+#importDiffDetails {
+  max-height: 340px;
+  overflow: auto;
+  padding: 0.75rem;
+  border-radius: 10px;
+  background: rgba(10,20,35,0.35);
+  border: 1px solid rgba(100,255,218,0.06);
+  box-shadow: inset 0 0 20px rgba(100,255,218,0.04);
+}
+
+/* === Confirm Button: Ripple + Pulse === */
+#confirmImport {
+  position: relative;
+  overflow: hidden;
+  border: 1px solid rgba(34,197,94,0.25);
+  background: linear-gradient(180deg, rgba(30,60,40,0.85), rgba(20,50,35,0.9));
+  color: #9effc9;
+  box-shadow: 0 0 8px rgba(34,197,94,0.12);
+  transition: all 0.2s ease;
+}
+#confirmImport:hover {
+  box-shadow: 0 0 15px rgba(34,197,94,0.4);
+}
+#confirmImport.pulse::before {
+  content: "";
+  position: absolute;
+  inset: -2px;
+  border-radius: 10px;
+  border: 2px solid rgba(34,197,94,0.4);
+  animation: pulseRing 1.6s ease-out forwards;
+}
+@keyframes pulseRing {
+  0% { opacity: 0.8; transform: scale(0.9); }
+  70% { opacity: 0.2; transform: scale(1.4); }
+  100% { opacity: 0; transform: scale(1.7); }
+}

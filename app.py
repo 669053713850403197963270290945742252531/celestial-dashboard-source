@@ -1,5 +1,5 @@
 from flask import Flask, render_template, request, jsonify, session, redirect, Response, url_for
-from utils import fetch_whitelist, update_whitelist, fetch_users_from_github, update_users_on_github, generate_key
+from utils import fetch_whitelist, update_whitelist, fetch_users_from_github, update_users_on_github, generate_key, get_github_headers, GITHUB_USER, GITHUB_REPO, GITHUB_FILE, GITHUB_BRANCH
 from datetime import datetime, timedelta, timezone
 import config
 import re
@@ -10,11 +10,15 @@ import hashlib
 from functools import wraps
 import platform
 import uuid
+import requests
+import base64
+import json
+import time
 
 app = Flask(__name__, static_folder='resources', static_url_path='/resources')
 
 # ==========================================================
-# Configuration
+# Configuration, Variables, & Constants
 # ==========================================================
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 DB_PATH = os.path.join(BASE_DIR, "users.db")
@@ -22,6 +26,8 @@ app.secret_key = "celestial_secret_key"
 
 # Session lasts 1 week
 app.permanent_session_lifetime = timedelta(weeks=1)
+start_time = time.time()
+SERVER_START_TIMESTAMP = time.time()
     
 # ==========================================================
 # Database Setup
@@ -103,18 +109,57 @@ def logout():
 @app.route("/dashboard")
 @login_required
 def dashboard():
-    return render_template("dashboard.html")
+    return render_template("dashboard.html", page_title="Dashboard")
 
 @app.route("/users")
 @login_required
 def users_page():
     users = fetch_whitelist()
-    return render_template("users.html", users=users)
+    return render_template("users.html", users=users, page_title="User Management")
 
 @app.route("/whitelist")
 @login_required
 def whitelist_management():
-    return render_template("whitelist.html")
+    return render_template("whitelist.html", page_title="Whitelist Management")
+
+@app.route("/hashing")
+@login_required
+def hashing_page():
+    return render_template("hashing.html", page_title="Hashing")
+
+@app.route("/settings")
+@login_required
+def settings_page():
+    return render_template("settings.html", page_title="Settings")
+
+# ==========================================================
+# TO BE COMPLETED
+# ==========================================================
+
+@app.route("/binary-conversion")
+@login_required
+def binary_translate_page():
+    return render_template("binary-conversion.html")
+
+@app.route("/color-conversion")
+@login_required
+def color_translate_page():
+    return render_template("color-conversion.html")
+
+@app.route("/generation")
+@login_required
+def string_generation_page():
+    return render_template("generation.html")
+
+@app.route("/time-conversion")
+@login_required
+def time_conversion_page():
+    return render_template("time-conversion.html")
+
+@app.route("/encoding-decoding")
+@login_required
+def string_encoding_decoding_page():
+    return render_template("encoding-decoding.html")
 
 # ==========================================================
 # API ROUTES
@@ -268,6 +313,100 @@ def session_status():
         return jsonify({"status": "valid"})
     else:
         return jsonify({"status": "invalid"})
+    
+@app.route("/api/github_users", methods=["GET"])
+def api_github_users():
+    try:
+        url = f"https://api.github.com/repos/{GITHUB_USER}/{GITHUB_REPO}/contents/{GITHUB_FILE}"
+        res = requests.get(url, headers=get_github_headers())
+        res.raise_for_status()
+        content = res.json()
+
+        # Decode the GitHub file content correctly
+        users = json.loads(base64.b64decode(content["content"]).decode())
+        sha = content["sha"]
+
+        # Return only clean data
+        return jsonify({"users": users, "sha": sha})
+    except Exception as e:
+        return jsonify(success=False, error=str(e)), 500
+
+
+@app.route("/api/github_update_users", methods=["POST"])
+def api_github_update_users():
+    try:
+        data = request.get_json()
+        users = data.get("users")
+        sha = data.get("sha")
+
+        if not users:
+            return jsonify(success=False, error="Missing users"), 400
+
+        url = f"https://api.github.com/repos/{GITHUB_USER}/{GITHUB_REPO}/contents/{GITHUB_FILE}"
+        payload = {
+            "message": "Update whitelist data via dashboard",
+            "content": base64.b64encode(json.dumps(users, indent=4).encode()).decode(),
+            "sha": sha,
+            "branch": GITHUB_BRANCH
+        }
+
+        res = requests.put(url, headers=get_github_headers(), json=payload)
+
+        # If 409, fetch latest SHA and retry
+        if res.status_code == 409:
+            latest = requests.get(url, headers=get_github_headers(), params={"ref": GITHUB_BRANCH})
+            latest.raise_for_status()
+            latest_sha = latest.json()["sha"]
+
+            payload["sha"] = latest_sha
+            res = requests.put(url, headers=get_github_headers(), json=payload)
+
+        res.raise_for_status()
+        return jsonify(success=True, sha=res.json().get("content", {}).get("sha", ""))
+
+    except Exception as e:
+        return jsonify(success=False, error=str(e)), 500
+    
+@app.route("/api/uptime")
+def uptime():
+        return jsonify({
+        "success": True,
+        "server_start": SERVER_START_TIMESTAMP  # store this once when app boots
+    })
+
+@app.route("/api/reroll_key", methods=["POST"])
+def reroll_key():
+    try:
+        data = request.get_json()
+        identifier = data.get("identifier")
+
+        if not identifier:
+            return jsonify(success=False, error="Missing identifier"), 400
+
+        # Fetch users + SHA
+        users, sha = fetch_users_from_github()
+
+        # Find existing user
+        user_index = next((i for i, u in enumerate(users) if u["Identifier"] == identifier), None)
+        if user_index is None:
+            return jsonify(success=False, error="User not found"), 404
+
+        # Generate new unique key
+        existing_keys = {u["Key"] for u in users}
+        new_key = generate_key()
+        while new_key in existing_keys:
+            new_key = generate_key()
+
+        # Update the key
+        users[user_index]["Key"] = new_key
+
+        # Commit update to GitHub
+        update_users_on_github(users, sha)
+
+        return jsonify(success=True, new_key=new_key)
+
+    except Exception as e:
+        return jsonify(success=False, error=str(e)), 500
     
 # ==========================================================
 # MAIN ENTRY

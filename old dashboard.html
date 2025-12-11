@@ -1,0 +1,206 @@
+{% extends "base.html" %}
+
+{% block content %}
+<link rel="stylesheet" href="/resources/styles/dashboard.css">
+<div data-page="{{ page_title }}">
+
+<div class="min-h-screen py-10 px-6 bg-transparent text-white" data-page="{{ page_title }}">
+  <div class="max-w-6xl mx-auto">
+    <!-- Header -->
+    <div class="text-center mb-12">
+      <h1 class="text-4xl font-bold text-[#64ffda] glow-text mb-2">Celestial Dashboard</h1>
+      <p class="text-gray-400 text-base">Manage your whitelist and users quickly</p>
+    </div>
+
+    <!-- Stats -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 gap-6 mb-12">
+      <!-- Whitelisted Count -->
+      <div class="bg-blue-950/60 border border-blue-800 rounded-2xl glow-card p-6 text-center hover:scale-[1.02] hover:bg-blue-900/70 transition-all duration-300">
+        <p class="text-gray-400 text-sm">Total Whitelisted</p>
+        <h3 class="text-3xl font-bold text-[#64ffda] mt-1">
+          <span id="whitelistedCount">0</span>
+        </h3>
+      </div>
+
+      <!-- Website Users -->
+      <div class="bg-blue-950/60 border border-blue-800 rounded-2xl glow-card p-6 text-center hover:scale-[1.02] hover:bg-blue-900/70 transition-all duration-300">
+        <p class="text-gray-400 text-sm">Website Users</p>
+        <h3 class="text-3xl font-bold text-green-400 mt-1">
+          <span id="websiteUsersCount">0</span>
+        </h3>
+      </div>
+    </div>
+
+    <!-- Session Status + Uptime Row -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 gap-6 mb-12">
+
+      <!-- Session Status -->
+      <div
+        class="bg-blue-950/60 border border-blue-800 rounded-2xl glow-card p-6 text-center hover:scale-[1.02] hover:bg-blue-900/70 transition-all duration-300">
+        <p class="text-gray-400 text-sm">Session Status</p>
+        <h3 id="sessionStatusText" class="text-2xl font-bold mt-1 text-yellow-400">Checking...</h3>
+      </div>
+
+      <!-- Continuous Uptime (its own card) -->
+      <div
+        class="bg-blue-950/60 border border-blue-800 rounded-2xl glow-card p-6 text-center hover:scale-[1.02] hover:bg-blue-900/70 transition-all duration-300">
+        <p class="text-gray-400 text-sm">Continuous Uptime</p>
+        <h3 id="uptimeText" class="text-2xl font-bold mt-1 text-[#64ffda]">Loading...</h3>
+      </div>
+
+    </div>
+
+    <!-- Quick Links -->
+    <div id="quick-links-container" class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+      <div
+        onclick="window.location.href='/users?action=add'"
+        class="cursor-pointer bg-blue-950/60 border border-blue-800 rounded-2xl glow-card p-6 flex flex-col items-center justify-center hover:bg-blue-900/70 hover:scale-[1.03] transition-all duration-300">
+        <h3 class="text-xl font-semibold mb-1 text-[#64ffda]">Whitelist User</h3>
+        <p class="text-gray-400 text-sm">Quickly add a user to the whitelist</p>
+      </div>
+
+      <div
+        onclick="window.location.href='/users?action=remove'"
+        class="cursor-pointer bg-blue-950/60 border border-blue-800 rounded-2xl glow-card p-6 flex flex-col items-center justify-center hover:bg-red-900/70 hover:scale-[1.03] transition-all duration-300">
+        <h3 class="text-xl font-semibold mb-1 text-red-400">Unwhitelist User</h3>
+        <p class="text-gray-400 text-sm">Quickly remove a user from the whitelist</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  // Reads the Celestial settings cookie
+  function getSettings() {
+    const match = document.cookie.match(/celestial_settings=([^;]+)/);
+    if (!match) return null;
+
+    try {
+      return JSON.parse(decodeURIComponent(match[1]));
+    } catch {
+      return null;
+    }
+  }
+
+  // Apply Quick Links visibility
+  const settings = getSettings();
+  const quickLinksContainer = document.getElementById("quick-links-container");
+
+  if (settings && settings.enableQuickLinks === false) {
+    quickLinksContainer.style.display = "none";
+  } else {
+    quickLinksContainer.style.display = "grid"; // use your grid layout
+  }
+
+/* -----------------------------
+   Fetch and Display Counts
+----------------------------- */
+async function updateWhitelistedCount() {
+  try {
+    const res = await fetch("/api/whitelist");
+    const data = await res.json();
+    if (data.success && Array.isArray(data.users)) {
+      document.getElementById("whitelistedCount").innerText = data.users.length;
+    }
+  } catch (err) {
+    console.error("Error fetching whitelist:", err);
+  }
+}
+
+async function updateWebsiteUsersCount() {
+  try {
+    const res = await fetch("/api/user_count");
+    const data = await res.json();
+    if (data.success) {
+      document.getElementById("websiteUsersCount").innerText = data.count;
+    }
+  } catch (err) {
+    console.error("Error fetching user count:", err);
+  }
+}
+
+/* -----------------------------
+   Session Status
+----------------------------- */
+
+async function updateSessionStatus() {
+  const statusText = document.getElementById("sessionStatusText");
+
+  try {
+    const res = await fetch("/api/session_status", { cache: "no-store" });
+    const data = await res.json();
+
+    statusText.classList.remove("text-yellow-400", "pulse-green", "pulse-red");
+
+    if (data.status === "valid") {
+      statusText.textContent = "VALID";
+      statusText.classList.add("pulse-green");
+    } else {
+      statusText.textContent = "INVALID";
+      statusText.classList.add("pulse-red");
+    }
+  } catch (err) {
+    console.error("Error checking session:", err);
+    statusText.textContent = "ERROR";
+    statusText.classList.add("pulse-red");
+  }
+}
+
+/* -----------------------------
+   Continuous Uptime
+----------------------------- */
+
+
+let serverStartTime = null;
+
+function formatTime(seconds) {
+    const weeks = Math.floor(seconds / (7 * 24 * 3600));
+    seconds %= 7 * 24 * 3600;
+
+    const days = Math.floor(seconds / (24 * 3600));
+    seconds %= 24 * 3600;
+
+    const hours = Math.floor(seconds / 3600);
+    seconds %= 3600;
+
+    const minutes = Math.floor(seconds / 60);
+    seconds %= 60;
+
+    return `${weeks}w ${days}d ${hours}h ${minutes}m ${seconds}s`;
+}
+
+async function loadUptime() {
+    try {
+        const res = await fetch("/api/uptime");
+        const data = await res.json();
+
+        if (data.success) {
+            serverStartTime = data.server_start;
+        }
+    } catch (err) {
+        console.error("Error fetching uptime:", err);
+    }
+}
+
+function startUptimeCounter() {
+    const uptimeText = document.getElementById("uptimeText");
+
+    setInterval(() => {
+        if (!serverStartTime) return;
+        const now = Date.now() / 1000;
+        const uptimeSec = Math.floor(now - serverStartTime);
+        uptimeText.textContent = formatTime(uptimeSec);
+    }, 1000);
+}
+
+/* -----------------------------
+   Init
+----------------------------- */
+document.addEventListener("DOMContentLoaded", () => {
+  updateWhitelistedCount();
+  updateWebsiteUsersCount();
+  updateSessionStatus();
+  loadUptime().then(startUptimeCounter);
+});
+</script>
+{% endblock %}

@@ -1,48 +1,102 @@
-@keyframes fadeZoomIn {
-  0% {
-    opacity: 0;
-    transform: scale(0.95);
-  }
-  100% {
-    opacity: 1;
-    transform: scale(1);
-  }
-}
-.animate-fadeZoomIn {
-  animation: fadeZoomIn 0.25s ease-out forwards;
+/* ===================================================
+   Celestial - Base Styles (Globals & Layout Only)
+   Glass components moved to ui-glass.css
+   =================================================== */
+
+* { box-sizing: border-box; }
+html, body { margin:0; padding:0; height:100%; }
+
+:root{
+  --bg-900: #020207;
+  --bg-800: #071027;
+  --soft-white: #e6eef0;
+  --muted: #9aa6af;
+  --cyan: #64ffda;
 }
 
-/* Glowing border effect */
-.glow-border {
-  position: relative;
-  overflow: hidden;
-  box-shadow: 0 0 10px rgba(100, 255, 218, 0.15);
-}
-.glow-border::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  border-radius: 0.5rem;
-  padding: 1px;
-  background: linear-gradient(90deg, #00aaff, #6b21a8, #00aaff);
-  background-size: 200% 200%;
-  animation: glowmove 3s linear infinite;
+body {
+  font-family: Inter, ui-sans-serif, system-ui;
+  color: var(--soft-white);
+  line-height: 1.45;
 
-  /* Proper masking for both WebKit & standard */
-  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
-  mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
-  -webkit-mask-composite: xor;
-  mask-composite: exclude;
-}
-.shadow-md {
-  box-shadow: 0 0 20px rgba(100, 255, 218, 0.25) !important;
+  /* Base background color */
+  background-color: var(--bg-900);
+
+  /* Multi-layer background */
+  background-image:
+    /* subtle radial glows */
+    radial-gradient(circle at 20% 20%, rgba(100,255,218,0.15) 0%, transparent 40%),
+    radial-gradient(circle at 80% 80%, rgba(0,200,255,0.12) 0%, transparent 50%),
+    radial-gradient(circle at 50% 50%, rgba(255,255,255,0.05) 0%, transparent 70%),
+    /* tiny star pattern */
+    url('data:image/svg+xml,%3Csvg width="100" height="100" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg"%3E%3Ccircle cx="10" cy="10" r="0.5" fill="white" fill-opacity="0.05"/%3E%3Ccircle cx="50" cy="80" r="0.5" fill="white" fill-opacity="0.05"/%3E%3Ccircle cx="90" cy="30" r="0.5" fill="white" fill-opacity="0.05"/%3E%3C/svg%3E'),
+    /* gradient base */
+    linear-gradient(180deg, var(--bg-900), #071a36);
+
+  /* Layer sizing */
+  background-repeat: no-repeat, no-repeat, no-repeat, repeat, no-repeat;
+  background-size: 500px 500px, 600px 600px, 800px 800px, 200px 200px, cover;
+  background-position: top left, bottom right, center, top left, top left;
+  background-attachment: fixed;
+  
+  /* Ensure full viewport coverage */
+  min-height: 100vh;
 }
 
-@keyframes glowmove {
-  0% {
-    background-position: 0% 50%;
-  }
-  100% {
-    background-position: 200% 50%;
-  }
+
+
+a { color: var(--cyan); text-decoration: none; }
+
+/* --- Typography helpers --- */
+.h1 { font-size: 1.9rem; font-weight:700; }
+.h2 { font-size: 1.25rem; font-weight:600; }
+.text-muted { color: var(--muted); }
+
+/* --- Layout Containers --- */
+.app-main {
+  display:flex;
+  flex-direction:row;
+  min-height:100vh;
+}
+
+#sidebar {
+  width:16rem;
+  padding:1.25rem;
+}
+
+main.content {
+  flex:1;
+  padding:2.25rem;
+  overflow-y:auto;
+}
+
+/* --- Grid --- */
+.grid-cards {
+  display:grid;
+  gap:1.25rem;
+  grid-template-columns: repeat(1, minmax(0,1fr));
+}
+@media (min-width:640px) {
+  .grid-cards.sm-cols-2 { grid-template-columns: repeat(2, minmax(0,1fr)); }
+}
+@media (min-width:1024px) {
+  .grid-cards.lg-cols-3 { grid-template-columns: repeat(3, minmax(0,1fr)); }
+}
+
+/* --- Flex utils --- */
+.u-center { display:flex; align-items:center; justify-content:center; }
+.u-space-between { display:flex; align-items:center; justify-content:space-between; }
+
+/* --- Notifications container --- */
+.notifications {
+  position:fixed;
+  right:1.25rem;
+  bottom:1.25rem;
+  z-index:60;
+}
+
+/* Responsive sidebar toggle (unchanged) */
+@media (max-width:800px){
+  #sidebar { position: fixed; left:0; top:0; bottom:0; transform:translateX(-100%); z-index:60; }
+  #sidebar.open { transform: translateX(0); }
 }

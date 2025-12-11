@@ -3,6 +3,7 @@
 {% block content %}
 
 <link rel="stylesheet" href="/resources/styles/users.css">
+<body data-page="{{ page_title }}">
 
 <div id="custom-confirm-container" class="fixed inset-0 flex items-center justify-center bg-black/50 backdrop-blur-sm hidden z-50">
   <div id="custom-confirm-box" class="bg-blue-900/20 border border-blue-700 rounded-2xl p-6 w-80 max-w-full text-center transform scale-90 opacity-0 transition-all duration-200">
@@ -16,14 +17,13 @@
 
 <div id="notification-container" class="fixed top-4 right-4 flex flex-col space-y-2 z-50 pointer-events-none max-w-xs"></div>
 
-<!-- Header + Add button -->
-<div class="flex flex-col sm:flex-row sm:items-center justify-between mb-6 gap-2 sm:gap-0">
-  <h2 class="text-3xl sm:text-3xl font-bold text-[#64ffda] tracking-wide">User Management</h2>
-  <button onclick="openAddModal()" class="glow-btn px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-500 text-white shadow-lg transition">+ Add User</button>
+<!-- Header -->
+<div class="flex justify-center mb-6">
+  <h2 class="text-3xl font-bold text-[#64ffda] tracking-wide">User Management</h2>
 </div>
 
-<!-- Search + Filter -->
-<div class="mb-4 flex flex-col sm:flex-row sm:items-center gap-2">
+<!-- Search + Filter + Add Button -->
+<div class="mb-4 flex flex-col sm:flex-row sm:items-center sm:justify-start gap-2 w-full max-w-[800px] mx-auto">
   <input type="text" id="searchInput" placeholder="Search..." 
          class="flex-1 p-3 rounded-lg bg-blue-950/30 border border-blue-700 text-white focus:outline-none focus:ring-2 focus:ring-[#64ffda] transition">
   <select id="filterSelect" class="p-3 rounded-lg bg-blue-950/30 border border-blue-700 text-white focus:outline-none focus:ring-2 focus:ring-[#64ffda] transition">
@@ -33,27 +33,32 @@
     <option value="DiscordId">Discord ID</option>
     <option value="JoinDate">Join Date</option>
   </select>
+  <button onclick="openAddModal()" class="glow-btn px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-500 text-white shadow-lg transition">
+    + Add User
+  </button>
 </div>
 
 <!-- Whitelist Table -->
-<div class="bg-blue-900/20 border border-blue-700 shadow-xl rounded-2xl overflow-x-auto p-4 sm:p-6">
-  <table id="whitelistTable" class="w-full text-left border-collapse">
-    <thead class="bg-blue-800/60 hidden sm:table-header-group">
-      <tr>
-        <th class="p-3 text-[#64ffda]">Identifier</th>
-        <th class="p-3 text-[#64ffda]">HWID</th>
-        <th class="p-3 text-[#64ffda]">Discord ID</th>
-        <th class="p-3 text-[#64ffda]">Rank</th>
-        <th class="p-3 text-[#64ffda]">Join Date</th>
-        <th class="p-3 text-[#64ffda]">Key</th>
-        <th class="p-3 text-[#64ffda]">Notes</th>
-        <th class="p-3 text-[#64ffda]">Actions</th>
-      </tr>
-    </thead>
-    <tbody id="whitelistBody">
-      <!-- Dynamic rows -->
-    </tbody>
-  </table>
+<div class="table-container w-full max-w-800 ml-auto">
+  <div class="bg-blue-900/20 border border-blue-700 shadow-xl rounded-2xl overflow-x-auto p-4 sm:p-6">
+    <table id="whitelistTable" class="w-full text-left border-collapse table-fixed">
+      <thead class="bg-blue-800/60 hidden sm:table-header-group">
+        <tr>
+          <th class="p-3 text-[#64ffda]">Identifier</th>
+          <th class="p-3 text-[#64ffda]">HWID</th>
+          <th class="p-3 text-[#64ffda]">Discord ID</th>
+          <th class="p-3 text-[#64ffda]">Rank</th>
+          <th class="p-3 text-[#64ffda]">Join Date</th>
+          <th class="p-3 text-[#64ffda]">Key</th>
+          <th class="p-3 text-[#64ffda]">Notes</th>
+          <th class="p-3 text-[#64ffda]">Actions</th>
+        </tr>
+      </thead>
+      <tbody id="whitelistBody">
+        <!-- Dynamic rows -->
+      </tbody>
+    </table>
+  </div>
 </div>
 
 <!-- Pagination -->
@@ -81,7 +86,7 @@
         <label>Discord ID</label>
       </div>
       <div class="input-group">
-        <select name="Rank" required>
+        <select id="addUserRankDropdown" name="Rank" required>
           <option value="" disabled selected>Select Rank</option>
           <option value="User">User</option>
           <option value="Moderator">Moderator</option>
@@ -103,7 +108,14 @@
   </div>
 </div>
 
-<script>
+
+<script type="module">
+import { createToast, createDialog } from '/resources/scripts/ui-notifs.js';
+
+// Expose globally for non-module scripts
+window.createToast = createToast;
+window.createDialog = createDialog;
+
 const modal = document.getElementById('userModal');
 const modalContent = document.getElementById('modalContent');
 const cancelBtnBottom = document.getElementById('cancelBtnBottom');
@@ -120,8 +132,8 @@ async function fetchUsers() {
     if(data.success) {
       users = data.users.map(u => ({ ...u, whitelisted: u.whitelisted ?? true }));
       renderTable();
-    } else { window.notify.error("Failed to fetch whitelist: "+data.error); }
-  } catch(e) { console.error(e); window.notify.error("Error fetching whitelist"); }
+    } else { createToast("Failed to fetch whitelist: "+data.error, "error"); }
+  } catch(e) { console.error(e); createToast("Error fetching whitelist", "error"); }
 }
 
 function openModal(title) {
@@ -147,9 +159,23 @@ function closeModal() {
 }
 
 function openAddModal() {
-  form.reset();
-  form.dataset.editIdentifier = "";
-  openModal("Add User");
+    form.reset();
+    form.dataset.editIdentifier = "";
+
+    const settingsMatch = document.cookie.match(/celestial_settings=([^;]+)/);
+    let defaultRank = "User"; // fallback
+
+    if (settingsMatch) {
+        try {
+            const settings = JSON.parse(decodeURIComponent(settingsMatch[1]));
+            if (settings.defaultRank) defaultRank = settings.defaultRank;
+        } catch {}
+    }
+
+    const rankDropdown = document.getElementById("addUserRankDropdown");
+    if (rankDropdown) rankDropdown.value = defaultRank;
+
+    openModal("Add User");
 }
 
 function editUserObj(u) {
@@ -160,47 +186,6 @@ function editUserObj(u) {
   form.Notes.value = u.Notes||"";
   form.dataset.editIdentifier = u.Identifier;
   openModal("Edit User");
-}
-
-function customConfirm(message){
-  return new Promise(resolve=>{
-    const container = document.getElementById('custom-confirm-container');
-    const box = document.getElementById('custom-confirm-box');
-    const msg = document.getElementById('custom-confirm-message');
-    const yesBtn = document.getElementById('confirm-yes');
-    const noBtn = document.getElementById('confirm-no');
-
-    msg.innerText = message;
-    container.classList.remove('hidden');
-
-    // Position center dynamically
-    const vw = window.innerWidth;
-    const vh = window.innerHeight;
-    box.style.top = `${vh/2 - box.offsetHeight/2}px`;
-    box.style.left = `${vw/2 - box.offsetWidth/2}px`;
-
-    requestAnimationFrame(()=>{
-      box.style.opacity = 1;
-      box.style.transform = 'scale(1)';
-    });
-
-    function cleanUp(result){
-      box.style.opacity = 0;
-      box.style.transform = 'scale(0.9)';
-      box.addEventListener('transitionend', ()=>{
-        container.classList.add('hidden');
-      }, { once: true });
-      yesBtn.removeEventListener('click', onYes);
-      noBtn.removeEventListener('click', onNo);
-      resolve(result);
-    }
-
-    function onYes(){ cleanUp(true); }
-    function onNo(){ cleanUp(false); }
-
-    yesBtn.addEventListener('click', onYes);
-    noBtn.addEventListener('click', onNo);
-  });
 }
 
 // Close buttons
@@ -249,29 +234,29 @@ form.addEventListener('submit', async e => {
   // Validation
   let hasError = false;
   if(newUser.Identifier.length < 3 || newUser.Identifier.length > 20) {
-    window.notify.error("Identifier must be 3-20 characters");
+    createToast("Identifier must be 3-20 characters", "error");
     hasError = true;
   }
   if(newUser.HWID.length !== 64) {
-    window.notify.error("HWID must be 64 characters (SHA-256)");
+    createToast("HWID must be 64 characters (SHA-256)", "error");
     hasError = true;
   }
   if(!/^\d{17,20}$/.test(newUser.DiscordId)) {
-    window.notify.error("Discord ID must be 17-20 digits");
+    createToast("Discord ID must be 17-20 digits", "error");
     hasError = true;
   }
 
   const others = isEditing ? users.filter(u=>u.Identifier !== form.dataset.editIdentifier) : users;
   if(others.some(u=>u.Identifier === newUser.Identifier)) {
-    window.notify.error("Identifier already exists");
+    createToast("Identifier already exists", "error");
     hasError = true;
   }
   if(others.some(u=>u.HWID === newUser.HWID)) {
-    window.notify.error("HWID already exists");
+    createToast("HWID already exists", "error");
     hasError = true;
   }
   if(others.some(u=>u.DiscordId === newUser.DiscordId)) {
-    window.notify.error("Discord ID already exists");
+    createToast("Discord ID already exists", "error");
     hasError = true;
   }
 
@@ -290,20 +275,26 @@ form.addEventListener('submit', async e => {
     if(data.success){
       await fetchUsers();
       closeModal();
-      window.notify.success("User has been successfully " + (isEditing ? "updated" : "added"));
+
+      if (isEditing) {
+        createToast("User has been successfully updated", "success");
+      } else {
+        createToast("User has been successfully added", "success");
+      }
+
     } else {
       // API returned error
-      data.error.split("\n").forEach(errMsg => window.notify.error(errMsg));
+      data.error.split("\n").forEach(errMsg => createToast(errMsg, "error"));
     }
   } catch(err){
     console.error(err);
-    window.notify.error("Error saving user");
+    createToast("Error saving user", "error");
   }
 });
 
 // Remove user
 async function removeUserObj(u) {
-  const confirmed = await customConfirm(`Delete ${u.Identifier}?`);
+  const confirmed = await createDialog(`Delete ${u.Identifier}?`);
   if(!confirmed) return;
 
   try {
@@ -315,13 +306,39 @@ async function removeUserObj(u) {
     const data = await res.json();
     if(data.success){
       await fetchUsers();
-      notify.success(`User ${u.Identifier} deleted!`);
+      createToast(`User ${u.Identifier} deleted!`, "error");
     } else {
-      notify.error(`Failed to delete: ${data.error}`);
+      createToast(`Failed to delete: ${data.error}`, "error");
     }
   } catch(err){
     console.error(err);
-    notify.error("Error deleting user");
+    createToast("Error deleting user", "error");
+  }
+}
+
+async function rerollUserKey(identifier) {
+  const confirmed = await createDialog(`Reroll key for ${identifier}?`);
+  if (!confirmed) return;
+
+  try {
+    const res = await fetch("/api/reroll_key", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ identifier })
+    });
+
+    const data = await res.json();
+
+    if (data.success) {
+      await fetchUsers();
+      createToast(`New key generated for ${identifier}`, "success");
+    } else {
+      createToast(`Failed to reroll key: ${data.error}`, "error");
+    }
+
+  } catch (err) {
+    console.error(err);
+    createToast("Error while rerolling key", "error");
   }
 }
 
@@ -387,9 +404,12 @@ function renderTable() {
       <td data-label="Join Date" class="p-3">${u.JoinDate}</td>
       <td data-label="Key" class="p-3">${u.Key||''}</td>
       <td data-label="Notes" class="p-3">${u.Notes||''}</td>
-      <td data-label="Actions" class="p-3 space-x-2">
-        <button class="editBtn glow-btn bg-yellow-600 px-3 py-1 rounded hover:bg-yellow-500 text-white transition min-w-[60px]">Edit</button>
-        <button class="removeBtn glow-btn bg-red-600 px-3 py-1 rounded hover:bg-red-500 text-white transition min-w-[60px]">Remove</button>
+      <td data-label=" Ac tions" class="p-3">
+        <div class="flex flex-wrap justify-center gap-2">
+          <button class="editBtn glow-btn bg-yellow-600 px-3 py-1 rounded hover:bg-yellow-500 text-white transition min-w-[80px]">Edit</button>
+          <button class="removeBtn glow-btn bg-red-600 px-3 py-1 rounded hover:bg-red-500 text-white transition min-w-[80px]">Remove</button>
+          <button class="rerollUserKey glow-btn px-3 py-1 bg-yellow-600 hover:bg-yellow-500 text-white rounded-lg text-sm min-w-[80px]">Reroll Key</button>
+        </div>
       </td>
     `;
     tbody.appendChild(tr);
@@ -397,6 +417,7 @@ function renderTable() {
     // Attach handlers **here, after element exists**
     tr.querySelector('.editBtn').addEventListener('click', () => editUserObj(u));
     tr.querySelector('.removeBtn').addEventListener('click', () => removeUserObj(u));
+    tr.querySelector('.rerollUserKey').addEventListener('click', () => rerollUserKey(u.Identifier));
   });
 
   applyButtonGlows();

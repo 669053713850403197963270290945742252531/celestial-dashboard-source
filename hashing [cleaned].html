@@ -1,0 +1,304 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div id="custom-confirm-container" class="fixed inset-0 flex items-center justify-center bg-black/50 backdrop-blur-sm hidden z-50">
+  <div id="custom-confirm-box" class="bg-blue-900/20 border border-blue-700 rounded-2xl p-6 w-80 max-w-full text-center transform scale-90 opacity-0 transition-all duration-200">
+    <p id="custom-confirm-message" class="text-[#64ffda] font-bold mb-4"></p>
+    <div class="flex justify-center gap-4 flex-wrap">
+      <button id="confirm-yes" class="glow-btn px-4 py-2 bg-green-600 hover:bg-green-500 text-white rounded-lg min-w-[80px]">Yes</button>
+      <button id="confirm-no" class="glow-btn px-4 py-2 bg-red-600 hover:bg-red-500 text-white rounded-lg min-w-[80px]">No</button>
+    </div>
+  </div>
+</div>
+
+<div class="min-h-screen py-10 px-6 bg-transparent text-white">
+  <div class="max-w-4xl mx-auto text-center mb-10">
+    <h1 class="text-4xl font-bold text-[#64ffda] glow-text mb-2">Hashing Utility</h1>
+    <p class="text-gray-400 text-base">Convert text using multiple cryptographic algorithms</p>
+  </div>
+
+  <!-- Hash Panel -->
+  <div class="bg-blue-950/60 border border-blue-800 rounded-2xl glow-card p-6 transition-all duration-300 hover:scale-[1.02] hover:bg-blue-900/70">
+    <div class="grid grid-cols-1 sm:grid-cols-2 gap-6 items-center mb-6">
+      <!-- Algorithm Dropdown -->
+      <div>
+        <label class="block text-gray-300 mb-2 font-medium">Select Algorithm</label>
+        <select id="hashMethod" class="w-full bg-blue-900/50 border border-blue-700 text-white rounded-lg px-4 py-2 focus:ring-2 focus:ring-[#64ffda] focus:outline-none">
+          <optgroup label="Utility">
+            <option value="blank">Blank (No Hash)</option>
+            <option value="identify">Identify Hash</option>
+          </optgroup>
+          <optgroup label="MD Family">
+            <option value="md2">MD2</option>
+            <option value="md4">MD4</option>
+            <option value="md5">MD5</option>
+          </optgroup>
+          <optgroup label="SHA Family">
+            <option value="sha1">SHA-1</option>
+            <option value="sha224">SHA-224</option>
+            <option value="sha256">SHA-256</option>
+            <option value="sha384">SHA-384</option>
+            <option value="sha512">SHA-512</option>
+          </optgroup>
+          <optgroup label="SHA3 Family">
+            <option value="sha3_224">SHA3-224</option>
+            <option value="sha3_256">SHA3-256</option>
+            <option value="sha3_384">SHA3-384</option>
+            <option value="sha3_512">SHA3-512</option>
+          </optgroup>
+          <optgroup label="Other Hashes">
+            <option value="ripemd160">RIPEMD-160</option>
+            <option value="blake2b">BLAKE2b</option>
+            <option value="blake2s">BLAKE2s</option>
+            <option value="whirlpool">Whirlpool</option>
+            <option value="sm3">SM3</option>
+          </optgroup>
+        </select>
+      </div>
+
+      <!-- Buttons -->
+      <div class="flex items-center justify-end gap-4 mt-4 sm:mt-0">
+        <label class="custom-checkbox text-gray-300 select-none">
+          <input type="checkbox" id="autoHash">
+          <span class="checkmark"></span>
+          <span class="text-sm">Live Update</span>
+        </label>
+        <button id="generateBtn" class="bg-[#64ffda]/10 border border-[#64ffda]/50 text-[#64ffda] rounded-lg px-6 py-2 font-semibold hover:bg-[#64ffda]/20 transition-all duration-300 hover:scale-105">Generate Hash</button>
+        <button id="historyBtn" class="bg-blue-800/40 border border-blue-700 text-[#64ffda] rounded-lg px-4 py-2 hover:bg-blue-800/70 transition-all duration-300 hover:scale-105">History</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Input & Output -->
+  <div id="inputText-container" class="mb-6 max-w-2xl mx-auto mt-8">
+    <label class="block text-gray-300 mb-2 font-medium">Input Text</label>
+    <textarea id="inputText" class="w-full bg-blue-900/50 border border-blue-700 text-white rounded-lg px-4 py-3 resize-none h-28 focus:ring-2 focus:ring-[#64ffda] focus:outline-none" placeholder="Enter text to hash..."></textarea>
+  </div>
+
+  <div class="mb-3 max-w-2xl mx-auto">
+    <label class="block text-gray-300 mb-2 font-medium">Output Hash</label>
+    <textarea id="outputText" class="w-full bg-blue-900/50 border border-blue-700 text-green-400 rounded-lg px-4 py-3 resize-none h-28 focus:ring-2 focus:ring-green-400 focus:outline-none" readonly placeholder="Hash result will appear here..."></textarea>
+    <div class="flex justify-end mt-2">
+      <button id="copyBtn" class="copy-btn flex items-center gap-2 px-4 py-2 font-medium"><span>📋</span> Copy to Clipboard</button>
+    </div>
+  </div>
+</div>
+
+
+<!--
+
+BELOW THIS, CLEAN "hashing.html"
+BELOW THIS, CLEAN "hashing.html"
+BELOW THIS, CLEAN "hashing.html"
+BELOW THIS, CLEAN "hashing.html"
+BELOW THIS, CLEAN "hashing.html"
+BELOW THIS, CLEAN "hashing.html"
+BELOW THIS, CLEAN "hashing.html"
+BELOW THIS, CLEAN "hashing.html"
+
+-->
+
+<!-- History Modal -->
+<div id="historyModal" class="fixed inset-0 bg-black/80 backdrop-blur-md hidden items-center justify-center z-50">
+  <div class="bg-blue-950/90 border border-[#64ffda]/40 rounded-2xl p-6 max-w-3xl w-[90%] shadow-lg glow-card relative">
+    <h2 class="text-2xl text-[#64ffda] font-bold mb-4 glow-text">Hashing History</h2>
+    <div class="overflow-y-auto max-h-[60vh]">
+      <table class="w-full border-collapse">
+        <thead>
+          <tr class="bg-blue-900/60 border-b border-[#64ffda]/30">
+            <th class="text-left p-3 text-[#64ffda]">Converted</th>
+            <th class="text-left p-3 text-[#64ffda]">Hashed</th>
+          </tr>
+        </thead>
+        <tbody id="historyTable" class="text-sm text-gray-300"></tbody>
+      </table>
+    </div>
+    <div class="flex justify-between items-center mt-5">
+      <button id="clearHistory" class="px-5 py-2 border border-red-400/50 rounded-lg text-red-400 hover:bg-red-500/10 transition-all">🧹 Clear History</button>
+      <button id="closeHistory" class="px-5 py-2 border border-[#64ffda]/50 rounded-lg text-[#64ffda] hover:bg-[#64ffda]/10 transition-all">Close</button>
+    </div>
+  </div>
+</div>
+
+<style>
+  /* === Glow and Styling === */
+  .glow-card { box-shadow: 0 0 15px rgba(100, 255, 218, 0.1); }
+  .glow-text { text-shadow: 0 0 10px rgba(100, 255, 218, 0.4); }
+  .copy-btn {
+    background: rgba(0, 255, 170, 0.08);
+    border: 1px solid rgba(100, 255, 218, 0.4);
+    color: #64ffda;
+    border-radius: 0.5rem;
+    transition: all 0.25s ease-in-out;
+    box-shadow: 0 0 8px rgba(100, 255, 218, 0.15);
+  }
+  .copy-btn:hover { background: rgba(0, 255, 170, 0.15); transform: scale(1.05); box-shadow: 0 0 12px rgba(100,255,218,0.35);}
+  #historyModal { opacity:0; transform:scale(0.97); transition: opacity 0.3s ease, transform 0.3s ease; }
+  #historyModal.show { opacity:1; transform:scale(1);}
+  #historyModal.fade-out { opacity:0; transform:scale(0.97);}
+  #historyTable tr:hover { background-color: rgba(100,255,218,0.08); }
+
+  /* === Custom Checkbox === */
+  .custom-checkbox { position:relative; display:inline-flex; align-items:center; cursor:pointer; user-select:none; gap:0.5rem; }
+  .custom-checkbox input { position:absolute; opacity:0; width:0;height:0; }
+  .custom-checkbox span.checkmark {
+    width:20px; height:20px; background: rgba(0,255,170,0.1); border:2px solid #64ffda; border-radius:0.375rem; display:inline-block; transition:all 0.2s; box-shadow:0 0 5px rgba(100,255,218,0.2); position:relative;
+  }
+  .custom-checkbox input:checked + .checkmark { background:#64ffda; border-color:#64ffda; box-shadow:0 0 8px #64ffda; }
+  .custom-checkbox .checkmark::after { content:""; position:absolute; display:none; }
+  .custom-checkbox input:checked + .checkmark::after {
+    display:block; left:5px; top:1px; width:6px; height:12px; border: solid white; border-width:0 2px 2px 0; transform: rotate(45deg);
+  }
+</style>
+
+<!-- ===== Scripts ===== -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.2.0/crypto-js.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/jssha@3.3.1/dist/sha.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/js-md2@0.1.2/build/md2.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/js-md4@0.3.2/build/md4.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/hash-wasm@4"></script>
+
+<script>
+  // === Cookie Helpers ===
+  const getCookie = name => (document.cookie.split('; ').find(row=>row.startsWith(name+'='))||'').split('=')[1] || '';
+  const setCookie = (name,val) => document.cookie = `${name}=${encodeURIComponent(val)}; path=/;`;
+  
+  // === History Helpers ===
+  const getHistory = () => decodeURIComponent(getCookie("hash-hist")||"").split("\n").filter(Boolean);
+  const setHistory = entries => setCookie("hash-hist", entries.join("\n"));
+
+  function appendHistory(input, hash){
+    if(!input || !hash || hash.startsWith("❌")) return;
+    const entries = getHistory();
+    const newEntry = `${input}: ${hash}`;
+    if(!entries.includes(newEntry)) entries.push(newEntry);
+    setHistory(entries);
+  }
+
+  // === Modal Helpers ===
+  const toggleModal = (modal, show) => {
+    if(show){
+      modal.classList.remove("hidden","fade-out");
+      modal.classList.add("flex");
+      requestAnimationFrame(()=> modal.classList.add("show"));
+    } else {
+      modal.classList.remove("show");
+      modal.classList.add("fade-out");
+      setTimeout(()=> { modal.classList.add("hidden"); modal.classList.remove("fade-out","flex"); },300);
+    }
+  }
+
+  // === Custom Confirm ===
+  function customConfirm(message){
+    return new Promise(resolve=>{
+      const container = document.getElementById('custom-confirm-container');
+      const box = document.getElementById('custom-confirm-box');
+      const msg = document.getElementById('custom-confirm-message');
+      const yesBtn = document.getElementById('confirm-yes');
+      const noBtn = document.getElementById('confirm-no');
+      msg.innerText = message;
+      container.classList.remove('hidden');
+      requestAnimationFrame(()=>{ box.style.opacity=1; box.style.transform='scale(1)'; });
+      function clean(result){
+        box.style.opacity=0; box.style.transform='scale(0.9)';
+        box.addEventListener('transitionend', ()=> container.classList.add('hidden'), {once:true});
+        yesBtn.removeEventListener('click', onYes);
+        noBtn.removeEventListener('click', onNo);
+        resolve(result);
+      }
+      const onYes = ()=>clean(true);
+      const onNo = ()=>clean(false);
+      yesBtn.addEventListener('click', onYes);
+      noBtn.addEventListener('click', onNo);
+    });
+  }
+
+  // === Hash Mapping ===
+  const cryptoMap = {
+    md2: input=>md2(input),
+    md4: input=>md4(input),
+    md5: input=>CryptoJS.MD5(input).toString(),
+    sha1: input=>CryptoJS.SHA1(input).toString(),
+    sha224: input=>CryptoJS.SHA224(input).toString(),
+    sha256: input=>CryptoJS.SHA256(input).toString(),
+    sha384: input=>CryptoJS.SHA384(input).toString(),
+    sha512: input=>CryptoJS.SHA512(input).toString(),
+    sha3_224: input=>new jsSHA("SHA3-224","TEXT").update(input).getHash("HEX"),
+    sha3_256: input=>new jsSHA("SHA3-256","TEXT").update(input).getHash("HEX"),
+    sha3_384: input=>new jsSHA("SHA3-384","TEXT").update(input).getHash("HEX"),
+    sha3_512: input=>new jsSHA("SHA3-512","TEXT").update(input).getHash("HEX"),
+    ripemd160: input=>hashwasm.ripemd160(input),
+    blake2b: input=>hashwasm.blake2b(input),
+    blake2s: input=>hashwasm.blake2s(input),
+    whirlpool: input=>hashwasm.whirlpool(input),
+    sm3: input=>hashwasm.sm3(input)
+  };
+
+  // === Generate Hash ===
+  async function generateHash(){
+    const input = document.getElementById("inputText").value.trim();
+    const method = document.getElementById("hashMethod").value;
+    const outputBox = document.getElementById("outputText");
+    if(!input && method!=="identify"){ outputBox.value="⚠️ Please enter text to hash."; return; }
+
+    let hash="";
+    if(method==="identify"){
+      if(!/^[0-9a-fA-F]+$/.test(input)) hash="❌ Not a hex hash";
+      else switch(input.length){
+        case 32: hash="Likely: MD5"; break;
+        case 40: hash="Likely: SHA-1, RIPEMD-160"; break;
+        case 56: hash="Likely: SHA-224"; break;
+        case 64: hash="Likely: SHA-256, SHA3-256, BLAKE2s"; break;
+        case 96: hash="Likely: SHA-384, SHA3-384"; break;
+        case 128: hash="Likely: SHA-512, SHA3-512, Whirlpool"; break;
+        case 256: hash="Likely: SHAKE-128/256, BLAKE2b"; break;
+        default: hash="❓ Unknown hash";
+      }
+    } else if(cryptoMap[method]) hash = await cryptoMap[method](input);
+    else hash="❌ Unsupported algorithm.";
+
+    outputBox.value=hash;
+    appendHistory(input,hash);
+  }
+
+  // === Event Listeners ===
+  document.getElementById("generateBtn").addEventListener("click", generateHash);
+
+  ["inputText","hashMethod"].forEach(id=>{
+    document.getElementById(id).addEventListener("input",()=>{ if(document.getElementById("autoHash").checked) generateHash(); });
+  });
+
+  // Copy Button
+  document.getElementById("copyBtn").addEventListener("click",()=>{
+    const output=document.getElementById("outputText").value;
+    if(!output) return;
+    navigator.clipboard.writeText(output);
+    const btn=document.getElementById("copyBtn");
+    btn.textContent="✅ Copied!";
+    setTimeout(()=>btn.innerHTML='<span>📋</span> Copy to Clipboard',1500);
+  });
+
+  // History Modal
+  const historyModal=document.getElementById("historyModal");
+  document.getElementById("historyBtn").addEventListener("click",()=>{
+    const tableBody=document.getElementById("historyTable");
+    tableBody.innerHTML="";
+    const data=getHistory();
+    if(!data.length) tableBody.innerHTML='<tr><td colspan="2" class="p-3 text-gray-500 text-center">No history available</td></tr>';
+    else data.forEach(line=>{
+      const [input,hash]=line.split(": ");
+      if(input && hash) tableBody.innerHTML+=`<tr><td class="p-3 border-b border-blue-800/50 text-white">${input}</td><td class="p-3 border-b border-blue-800/50 text-green-400">${hash}</td></tr>`;
+    });
+    toggleModal(historyModal,true);
+  });
+
+  document.getElementById("closeHistory").addEventListener("click",()=>toggleModal(historyModal,false));
+
+  document.getElementById("clearHistory").addEventListener("click",async()=>{
+    toggleModal(historyModal,false);
+    const result=await customConfirm("Are you sure you want to clear history?");
+    if(result){ setHistory([]); document.getElementById("historyTable").innerHTML=""; }
+  });
+
+</script>
+{% endblock %}
