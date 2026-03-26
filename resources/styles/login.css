@@ -1,5 +1,5 @@
 /* =========================
-          MAIN
+          MAIN TEMPLATE
 ========================= */
 
 body {
@@ -70,7 +70,9 @@ button:disabled {
   backdrop-filter: blur(6px);
   opacity: 0;
   transform: translateY(8px);
-  transition: opacity 0.8s ease, transform 0.8s ease;
+  transition:
+    opacity 0.8s ease,
+    transform 0.8s ease;
   pointer-events: none; /* avoids accidental clicks */
   z-index: 50;
 }
