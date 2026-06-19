@@ -2,400 +2,359 @@
 
 {% block content %}
 
-<body data-page="{{ page_title }}">
+<div class="min-h-screen py-6 px-4 sm:py-10 sm:px-6 text-white">
+  <div class="max-w-5xl mx-auto">
 
-  <div id="custom-confirm-container"
-    class="fixed inset-0 flex items-center justify-center bg-black/50 backdrop-blur-sm hidden z-50">
-    <div id="custom-confirm-box"
-      class="bg-blue-900/20 border border-blue-700 rounded-2xl p-4 sm:p-6 w-full sm:w-80 max-w-full text-center transform scale-90 opacity-0 transition-all duration-200">
-      <p id="custom-confirm-message" class="text-[#64ffda] font-bold mb-4"></p>
-      <div class="flex justify-center gap-2 sm:gap-4 flex-wrap">
-        <button id="confirm-yes"
-          class="glow-btn px-4 py-2 bg-green-600 hover:bg-green-500 text-white rounded-lg min-w-[80px]">Yes</button>
-        <button id="confirm-no"
-          class="glow-btn px-4 py-2 bg-red-600 hover:bg-red-500 text-white rounded-lg min-w-[80px]">No</button>
-      </div>
+    <!-- Header -->
+    <div class="text-center mb-8">
+      <h1 class="text-2xl sm:text-4xl font-bold text-[#64ffda] glow-text mb-2">Roblox Lookup</h1>
+      <p class="text-gray-400 text-sm">Advanced user intelligence panel</p>
     </div>
-  </div>
 
-  <div class="min-h-screen py-10 px-6 text-white">
-    <div class="max-w-5xl mx-auto">
+    <!-- Main Panel -->
+    <div class="bg-blue-950/60 border border-blue-800 rounded-2xl glow-card p-4 sm:p-6 transition-all duration-300">
 
-      <!-- HEADER -->
-      <div class="text-center mb-10">
-        <h1 class="text-4xl font-bold text-[#64ffda] glow-text mb-2">Roblox Lookup</h1>
-        <p class="text-gray-400">Advanced user intelligence panel</p>
-      </div>
+      <!-- Search Row -->
+      <div class="flex flex-col sm:flex-row gap-2 mb-6">
+        <input id="userInput"
+          class="flex-1 bg-blue-900/50 border border-blue-700 rounded-lg px-4 py-2 text-white focus:ring-2 focus:ring-[#64ffda] outline-none"
+          placeholder="Username / Display Name / User ID">
 
-      <!-- MAIN PANEL -->
-      <div
-        class="bg-blue-950/60 border border-blue-800 rounded-2xl glow-card p-4 sm:p-6 transition-all duration-300 hover:bg-blue-900/70">
-
-        <!-- INPUT -->
-        <div class="flex gap-3 mb-6 flex-wrap">
-          <input id="userInput"
-            class="flex-1 bg-blue-900/50 border border-blue-700 rounded-lg px-4 py-2 focus:ring-2 focus:ring-[#64ffda] outline-none"
-            placeholder="Username / Display Name / User ID">
-
-          <select id="avatarType" class="bg-blue-900/50 border border-blue-700 rounded-lg px-3 py-2">
+        <div class="flex gap-2">
+          <select id="avatarType"
+            class="flex-1 sm:flex-none bg-blue-900/50 border border-blue-700 text-white rounded-lg px-3 py-2 focus:ring-2 focus:ring-[#64ffda] outline-none">
             <option value="headshot">Headshot</option>
             <option value="bust">Bust</option>
             <option value="full">Full Body</option>
           </select>
 
           <button id="lookupBtn"
-            class="bg-[#64ffda]/10 border border-[#64ffda]/50 px-5 py-2 rounded-lg hover:bg-[#64ffda]/20 transition">
+            class="flex-1 sm:flex-none bg-[#64ffda]/10 border border-[#64ffda]/50 text-[#64ffda] px-5 py-2 rounded-lg hover:bg-[#64ffda]/20 transition font-semibold">
             Lookup
           </button>
         </div>
-
-        <!-- AVATAR -->
-        <div class="flex items-center gap-2 sm:gap-4 mb-6">
-          <img id="avatar"
-            class="w-20 h-20 rounded-xl opacity-0 transition duration-300 border border-[#64ffda]/30 shadow-lg">
-        </div>
-
-        <!-- TABS -->
-        <div class="flex gap-3 mb-4">
-          <div class="tab active-tab" data-tab="profile">Profile</div>
-          <div class="tab" data-tab="inventory">Inventory</div>
-          <div class="tab" data-tab="social">Social</div>
-        </div>
-
-        <!-- CONTENT -->
-        <div id="contentBox"
-          class="bg-blue-900/40 border border-blue-800 rounded-xl p-5 min-h-[200px] transition-all duration-300">
-        </div>
-
       </div>
 
-      <!-- RESTRICTED BOX -->
-      <div class="mt-6 p-4 sm:p-6 border border-[#64ffda]/30 rounded-xl glow-pulse text-sm leading-relaxed">
+      <!-- Avatar + name summary row -->
+      <div id="avatarRow" class="hidden items-center gap-4 mb-6">
+        <img id="avatar"
+          class="w-16 h-16 sm:w-20 sm:h-20 rounded-xl border border-[#64ffda]/30 shadow-lg flex-shrink-0"
+          style="opacity:0;transition:opacity 0.3s">
+        <div id="avatarMeta" class="text-sm text-gray-300 leading-relaxed"></div>
+      </div>
 
-        <h3 class="text-[#64ffda] text-lg font-semibold mb-2">Restricted & Protected Data</h3>
+      <!-- Tabs -->
+      <div class="flex flex-wrap gap-2 mb-4">
+        <div class="tab active-tab" data-tab="profile">Profile</div>
+        <div class="tab" data-tab="inventory">Inventory</div>
+        <div class="tab" data-tab="social">Social</div>
+      </div>
 
-        <p class="text-gray-300 mb-3">
-          The following information is intentionally protected by Roblox's security and privacy systems.
-          This application does not attempt to access or bypass these safeguards.
-        </p>
-
-        <ul class="list-disc list-inside text-gray-400 space-y-1">
-          <li>Email address</li>
-          <li>Password or authentication data</li>
-          <li>IP address or precise geographic location</li>
-          <li>Private inventory (when visibility is restricted)</li>
-          <li>Direct messages and chat logs</li>
-          <li>Robux balance and transaction history</li>
-          <li>Trade history and inbound/outbound trades</li>
-        </ul>
-
-        <p class="mt-4 text-gray-500 text-xs">
-          Certain features such as joining a user’s game or viewing their activity may also be limited
-          depending on the user's privacy settings, server type, or platform restrictions.
-        </p>
-
+      <!-- Content -->
+      <div id="contentBox"
+        class="bg-blue-900/40 border border-blue-800 rounded-xl p-4 sm:p-5 min-h-[200px] transition-all duration-300">
       </div>
 
     </div>
+
+    <!-- Restricted Box -->
+    <div class="mt-6 p-4 sm:p-6 border border-[#64ffda]/30 rounded-xl glow-pulse text-sm leading-relaxed">
+      <h3 class="text-[#64ffda] text-lg font-semibold mb-2">Restricted & Protected Data</h3>
+      <p class="text-gray-300 mb-3">
+        The following information is intentionally protected by Roblox's security and privacy systems.
+        This application does not attempt to access or bypass these safeguards.
+      </p>
+      <ul class="list-disc list-inside text-gray-400 space-y-1">
+        <li>Email address</li>
+        <li>Password or authentication data</li>
+        <li>IP address or precise geographic location</li>
+        <li>Private inventory (when visibility is restricted)</li>
+        <li>Direct messages and chat logs</li>
+        <li>Robux balance and transaction history</li>
+        <li>Trade history and inbound/outbound trades</li>
+      </ul>
+      <p class="mt-4 text-gray-500 text-xs">
+        Certain features such as joining a user's game or viewing their activity may also be limited
+        depending on the user's privacy settings, server type, or platform restrictions.
+      </p>
+    </div>
+
   </div>
-
-  <style>
-    /* Tabs */
-    .tab {
-      padding: 8px 16px;
-      border: 1px solid rgba(100, 255, 218, 0.3);
-      border-radius: 8px;
-      cursor: pointer;
-      transition: 0.2s;
-    }
-
-    .tab:hover {
-      background: rgba(100, 255, 218, 0.1);
-    }
-
-    .active-tab {
-      background: rgba(100, 255, 218, 0.2);
-      box-shadow: 0 0 10px rgba(100, 255, 218, 0.4);
-    }
-
-    /* Skeleton */
-    .skeleton {
-      height: 14px;
-      margin-bottom: 10px;
-      background: linear-gradient(90deg, #1a1d26, #2a2e3a, #1a1d26);
-      animation: shimmer 1.2s infinite;
-    }
-
-    @keyframes shimmer {
-      0% {
-        background-position: -200px;
-      }
-
-      100% {
-        background-position: 200px;
-      }
-    }
-
-    /* Glow Pulse */
-    .glow-pulse {
-      position: relative;
-      z-index: 1;
-    }
-
-    .glow-pulse::before {
-      content: "";
-      position: absolute;
-      inset: -2px;
-      border-radius: inherit;
-      background: radial-gradient(circle, rgba(100, 255, 218, 0.25), transparent 70%);
-      opacity: 0.6;
-      filter: blur(12px);
-      z-index: -1;
-      animation: smoothGlow 4s ease-in-out infinite;
-    }
-
-    .glow-pulse::after {
-      content: "";
-      position: absolute;
-      inset: -6px;
-      border-radius: inherit;
-      background: radial-gradient(circle, rgba(100, 255, 218, 0.15), transparent 80%);
-      filter: blur(20px);
-      z-index: -2;
-      animation: smoothGlow 4s ease-in-out infinite reverse;
-    }
-
-    @keyframes smoothGlow {
-      0% {
-        opacity: 0.4;
-        transform: scale(0.98);
-      }
-
-      50% {
-        opacity: 0.9;
-        transform: scale(1.02);
-      }
-
-      100% {
-        opacity: 0.4;
-        transform: scale(0.98);
-      }
-    }
-
-    /* Disabled */
-    .disabled {
-      opacity: 0.4;
-      pointer-events: none;
-    }
-  </style>
-
-  <script>
-    let currentTab = "profile";
-    let currentData = null;
-
-    const content = document.getElementById("contentBox");
-    const avatar = document.getElementById("avatar");
-
-    /* Skeleton Loader */
-    function skeleton() {
-      return `
-    <div class="skeleton w-2/3"></div>
-    <div class="skeleton w-1/2"></div>
-    <div class="skeleton w-3/4"></div>
-  `;
-    }
-
-    function formatDate(dateString) {
-      if (!dateString) return "Unknown";
-
-      const date = new Date(dateString);
-
-      return new Intl.DateTimeFormat(undefined, {
-        year: "numeric",
-        month: "long",
-        day: "numeric",
-        hour: "numeric",
-        minute: "2-digit",
-        timeZoneName: "short"
-      }).format(date);
-    }
-
-    function getAccountAge(dateString) {
-      const created = new Date(dateString);
-      const now = new Date();
-
-      let years = now.getFullYear() - created.getFullYear();
-      let months = now.getMonth() - created.getMonth();
-
-      if (months < 0) {
-        years--;
-        months += 12;
-      }
-
-      let parts = [];
-
-      if (years > 0) {
-        parts.push(years === 1 ? "1 year" : `${years} years`);
-      }
-
-      if (months > 0) {
-        parts.push(months === 1 ? "1 month" : `${months} months`);
-      }
-
-      return parts.length ? parts.join(", ") : "Less than a month";
-    }
-
-    function joinGame(placeId, jobId) {
-      if (jobId) {
-        window.location.href = `roblox://experiences/start?placeId=${placeId}&gameInstanceId=${jobId}`;
-      } else {
-        window.open(`https://www.roblox.com/games/${placeId}`, "_blank");
-      }
-    }
-
-    /* Tabs */
-    document.querySelectorAll(".tab").forEach(tab => {
-      tab.onclick = () => {
-        document.querySelectorAll(".tab").forEach(t => t.classList.remove("active-tab"));
-        tab.classList.add("active-tab");
-        currentTab = tab.dataset.tab;
-        render();
-      };
-    });
-
-    /* Render */
-    function render() {
-      if (!currentData) return;
-      const canJoin = currentData.status === "In Game";
-
-      const joinButton = canJoin
-        ? `<button onclick="joinGame('${currentData.placeId}', '${currentData.jobId}')"
-        class="bg-green-600/20 border border-green-400 text-green-300 px-4 py-2 rounded-lg hover:bg-green-500/30 transition">
-        ▶ Join Game
-     </button>`
-        : `<button
-        class="bg-gray-700 border border-gray-600 text-gray-400 px-4 py-2 rounded-lg cursor-not-allowed opacity-50">
-        Join Unavailable
-     </button>`;
-
-      if (currentTab === "profile") {
-        content.innerHTML = `
-    <h2 class="text-xl text-[#64ffda]">${currentData.username} (${currentData.displayName})</h2>
-
-    <div class="mt-2 space-y-1 text-gray-300">
-      <p><b>User ID:</b> ${currentData.id}</p>
-      <p><b>Created:</b> ${formatDate(currentData.created)}</p>
-      <p><b>Account Age:</b> ${getAccountAge(currentData.created)}</p>
-
-      <p>
-        <b>Status:</b> ${currentData.status}
-        ${currentData.status === "Offline" ? `
-          <span class="ml-2 text-[#64ffda] cursor-pointer relative group">
-            ⓘ
-            <span class="absolute left-1/2 -translate-x-1/2 mt-2 w-64 text-xs bg-blue-950 border border-blue-700 p-2 rounded opacity-0 group-hover:opacity-100 transition">
-              This user may appear offline due to Offline Mode or privacy settings.
-            </span>
-          </span>
-        ` : ""}
-      </p>
-
-      <p>
-        <b>Last Online:</b>
-        ${currentData.lastOnline
-            ? formatDate(currentData.lastOnline)
-            : (currentData.status !== "Offline"
-              ? "Currently active"
-              : "Unavailable")
-          }
-      </p>
-    </div>
-
-    <div class="mt-4 text-gray-300">
-      <p><b>Bio:</b></p>
-      <p>${currentData.description || "No bio set."}</p>
-    </div>
-
-    <div class="mt-4 grid grid-cols-3 gap-2 sm:gap-4 text-center">
-      <div class="bg-blue-900/40 p-3 rounded-lg border border-blue-800">
-        <p class="text-[#64ffda] text-lg">${currentData.friendsCount}</p>
-        <p class="text-sm text-gray-400">Friends</p>
-      </div>
-
-      <div class="bg-blue-900/40 p-3 rounded-lg border border-blue-800">
-        <p class="text-[#64ffda] text-lg">${currentData.followers}</p>
-        <p class="text-sm text-gray-400">Followers</p>
-      </div>
-
-      <div class="bg-blue-900/40 p-3 rounded-lg border border-blue-800">
-        <p class="text-[#64ffda] text-lg">${currentData.following}</p>
-        <p class="text-sm text-gray-400">Following</p>
-      </div>
-    </div>
-
-<div class="mt-4">
-  ${currentData.canJoin
-            ? `<button onclick="joinGame('${currentData.placeId}', '${currentData.jobId}')"
-        class="bg-green-600/20 border border-green-400 text-green-300 px-4 py-2 rounded-lg hover:bg-green-500/30 transition">
-        ▶ Join Game
-      </button>`
-
-            : currentData.status === "In Game"
-              ? `<button
-        class="bg-yellow-600/20 border border-yellow-400 text-yellow-300 px-4 py-2 rounded-lg cursor-not-allowed">
-        ⚠ In Game (Server Not Exposed)
-      </button>`
-
-              : `<button
-        class="bg-gray-700 border border-gray-600 text-gray-400 px-4 py-2 rounded-lg cursor-not-allowed opacity-50">
-        Join Unavailable
-      </button>`
-          }
 </div>
-      `;
-      }
 
-      if (currentTab === "inventory") {
-        if (!currentData.inventory || currentData.inventory.length === 0) {
-          content.innerHTML = `<div class="disabled">Inventory Private</div>`;
-          return;
-        }
+<style>
+  .glow-card { box-shadow: 0 0 15px rgba(100,255,218,0.1); }
+  .glow-text { text-shadow: 0 0 10px rgba(100,255,218,0.4); }
 
-        content.innerHTML = currentData.inventory.map(i =>
-          `<a href="https://www.roblox.com/catalog/${i.assetId}"
-              target="_blank"
-              class="block text-[#64ffda] hover:underline">
-              • ${i.name}
-          </a>`
-        ).join("");
-      }
+  .tab {
+    padding: 6px 14px;
+    border: 1px solid rgba(100,255,218,0.3);
+    border-radius: 8px;
+    cursor: pointer;
+    transition: 0.2s;
+    font-size: 0.875rem;
+    white-space: nowrap;
+  }
+  .tab:hover { background: rgba(100,255,218,0.1); }
+  .active-tab {
+    background: rgba(100,255,218,0.2);
+    box-shadow: 0 0 10px rgba(100,255,218,0.4);
+  }
 
-      if (currentTab === "social") {
-        content.innerHTML = `
-      <h3 class="text-[#64ffda]">Friends (${currentData.friends.length})</h3>
-      ${currentData.friends.slice(0, 10).map(f => `<p>${f.name}</p>`).join("")}
+  .skeleton {
+    height: 14px;
+    margin-bottom: 10px;
+    border-radius: 4px;
+    background: linear-gradient(90deg, #1a1d26, #2a2e3a, #1a1d26);
+    background-size: 400px 100%;
+    animation: shimmer 1.2s infinite;
+  }
+  @keyframes shimmer {
+    0%   { background-position: -400px 0; }
+    100% { background-position: 400px 0; }
+  }
 
-      <h3 class="mt-4 text-[#64ffda]">Groups</h3>
-      ${currentData.groups.map(g => `<p>${g.name} (${g.role})</p>`).join("")}
+  .disabled { opacity: 0.4; pointer-events: none; }
+
+  .glow-pulse { position: relative; z-index: 1; }
+  .glow-pulse::before {
+    content: "";
+    position: absolute;
+    inset: -2px;
+    border-radius: inherit;
+    background: radial-gradient(circle, rgba(100,255,218,0.25), transparent 70%);
+    opacity: 0.6;
+    filter: blur(12px);
+    z-index: -1;
+    animation: smoothGlow 4s ease-in-out infinite;
+  }
+  .glow-pulse::after {
+    content: "";
+    position: absolute;
+    inset: -6px;
+    border-radius: inherit;
+    background: radial-gradient(circle, rgba(100,255,218,0.15), transparent 80%);
+    filter: blur(20px);
+    z-index: -2;
+    animation: smoothGlow 4s ease-in-out infinite reverse;
+  }
+  @keyframes smoothGlow {
+    0%,100% { opacity:0.4; transform:scale(0.98); }
+    50%      { opacity:0.9; transform:scale(1.02); }
+  }
+
+  /* Join button full-width on mobile */
+  @media (max-width: 640px) {
+    .join-btn { width: 100%; text-align: center; justify-content: center; }
+  }
+</style>
+
+<script>
+  let currentTab = "profile";
+  let currentData = null;
+
+  const contentBox  = document.getElementById("contentBox");
+  const avatarImg   = document.getElementById("avatar");
+  const avatarRow   = document.getElementById("avatarRow");
+  const avatarMeta  = document.getElementById("avatarMeta");
+
+  function skeleton() {
+    return `
+      <div class="skeleton w-2/3"></div>
+      <div class="skeleton w-1/2"></div>
+      <div class="skeleton w-3/4"></div>
     `;
-      }
+  }
+
+  function formatDate(ds) {
+    if (!ds) return "Unknown";
+    return new Intl.DateTimeFormat(undefined, {
+      year:"numeric", month:"long", day:"numeric",
+      hour:"numeric", minute:"2-digit", timeZoneName:"short"
+    }).format(new Date(ds));
+  }
+
+  function getAccountAge(ds) {
+    const created = new Date(ds), now = new Date();
+    let years = now.getFullYear() - created.getFullYear();
+    let months = now.getMonth() - created.getMonth();
+    if (months < 0) { years--; months += 12; }
+    const parts = [];
+    if (years > 0)  parts.push(years  === 1 ? "1 year"  : `${years} years`);
+    if (months > 0) parts.push(months === 1 ? "1 month" : `${months} months`);
+    return parts.length ? parts.join(", ") : "Less than a month";
+  }
+
+  function joinGame(placeId, jobId) {
+    if (jobId) {
+      window.location.href = `roblox://experiences/start?placeId=${placeId}&gameInstanceId=${jobId}`;
+    } else {
+      window.open(`https://www.roblox.com/games/${placeId}`, "_blank");
     }
+  }
 
-    /* Lookup */
-    document.getElementById("lookupBtn").onclick = async () => {
-      const input = document.getElementById("userInput").value;
-      const avatarType = document.getElementById("avatarType").value;
-
-      content.innerHTML = skeleton();
-
-      const res = await fetch(`/api/full?query=${input}&avatar=${avatarType}`);
-      const data = await res.json();
-
-      currentData = data;
-
-      avatar.src = data.avatar;
-      avatar.style.opacity = 1;
-
+  document.querySelectorAll(".tab").forEach(tab => {
+    tab.onclick = () => {
+      document.querySelectorAll(".tab").forEach(t => t.classList.remove("active-tab"));
+      tab.classList.add("active-tab");
+      currentTab = tab.dataset.tab;
       render();
     };
-  </script>
-  {% endblock %}
+  });
+
+  function joinButtonHTML(data) {
+    if (data.canJoin) {
+      return `<button onclick="joinGame('${data.placeId}','${data.jobId}')"
+        class="join-btn bg-green-600/20 border border-green-400 text-green-300 px-4 py-2 rounded-lg hover:bg-green-500/30 transition flex items-center gap-2">
+        ▶ Join Game
+      </button>`;
+    }
+    if (data.status === "In Game") {
+      return `<button class="join-btn bg-yellow-600/20 border border-yellow-400 text-yellow-300 px-4 py-2 rounded-lg cursor-not-allowed">
+        ⚠ In Game (Server Not Exposed)
+      </button>`;
+    }
+    return `<button class="join-btn bg-gray-700 border border-gray-600 text-gray-400 px-4 py-2 rounded-lg cursor-not-allowed opacity-50">
+      Join Unavailable
+    </button>`;
+  }
+
+  function render() {
+    if (!currentData) return;
+
+    if (currentTab === "profile") {
+      contentBox.innerHTML = `
+        <h2 class="text-lg sm:text-xl text-[#64ffda] font-bold mb-3">
+          ${currentData.username}
+          <span class="text-gray-400 font-normal text-base">(${currentData.displayName})</span>
+        </h2>
+
+        <div class="space-y-1 text-gray-300 text-sm sm:text-base mb-4">
+          <p><span class="text-gray-500">User ID</span> &nbsp; ${currentData.id}</p>
+          <p><span class="text-gray-500">Created</span> &nbsp; ${formatDate(currentData.created)}</p>
+          <p><span class="text-gray-500">Account Age</span> &nbsp; ${getAccountAge(currentData.created)}</p>
+          <p>
+            <span class="text-gray-500">Status</span> &nbsp; ${currentData.status}
+            ${currentData.status === "Offline" ? `
+              <span class="ml-1 text-[#64ffda] cursor-pointer relative group text-xs">
+                ⓘ
+                <span class="absolute left-0 mt-2 w-56 text-xs bg-blue-950 border border-blue-700 p-2 rounded
+                             opacity-0 group-hover:opacity-100 transition z-10 pointer-events-none">
+                  This user may appear offline due to Offline Mode or privacy settings.
+                </span>
+              </span>` : ""}
+          </p>
+          <p><span class="text-gray-500">Last Online</span> &nbsp;
+            ${currentData.lastOnline
+              ? formatDate(currentData.lastOnline)
+              : currentData.status !== "Offline" ? "Currently active" : "Unavailable"}
+          </p>
+        </div>
+
+        ${currentData.description
+          ? `<div class="mb-4 text-sm text-gray-300 bg-blue-900/30 rounded-lg p-3 border border-blue-800">
+               <p class="text-gray-500 mb-1 text-xs uppercase tracking-wide">Bio</p>
+               <p>${currentData.description}</p>
+             </div>`
+          : ""}
+
+        <div class="grid grid-cols-3 gap-2 sm:gap-4 text-center mb-4">
+          <div class="bg-blue-900/40 p-3 rounded-lg border border-blue-800">
+            <p class="text-[#64ffda] text-lg font-bold">${currentData.friendsCount}</p>
+            <p class="text-xs text-gray-400">Friends</p>
+          </div>
+          <div class="bg-blue-900/40 p-3 rounded-lg border border-blue-800">
+            <p class="text-[#64ffda] text-lg font-bold">${currentData.followers}</p>
+            <p class="text-xs text-gray-400">Followers</p>
+          </div>
+          <div class="bg-blue-900/40 p-3 rounded-lg border border-blue-800">
+            <p class="text-[#64ffda] text-lg font-bold">${currentData.following}</p>
+            <p class="text-xs text-gray-400">Following</p>
+          </div>
+        </div>
+
+        ${joinButtonHTML(currentData)}
+      `;
+    }
+
+    if (currentTab === "inventory") {
+      if (!currentData.inventory || currentData.inventory.length === 0) {
+        contentBox.innerHTML = `<p class="text-gray-500 text-center py-8">Inventory is private or empty.</p>`;
+        return;
+      }
+      contentBox.innerHTML = `
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+          ${currentData.inventory.map(i => `
+            <a href="https://www.roblox.com/catalog/${i.assetId}" target="_blank"
+               class="block px-3 py-2 rounded-lg bg-blue-900/30 border border-blue-800
+                      text-[#64ffda] hover:bg-blue-800/50 transition text-sm truncate">
+              ${i.name}
+            </a>`).join("")}
+        </div>`;
+    }
+
+    if (currentTab === "social") {
+      contentBox.innerHTML = `
+        <div class="mb-4">
+          <h3 class="text-[#64ffda] font-semibold mb-2">
+            Friends <span class="text-gray-400 font-normal text-sm">(${currentData.friends.length})</span>
+          </h3>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-1">
+            ${currentData.friends.slice(0, 10).map(f =>
+              `<p class="text-gray-300 text-sm px-2 py-1 rounded bg-blue-900/20">${f.name}</p>`
+            ).join("") || '<p class="text-gray-500 text-sm">No friends found.</p>'}
+          </div>
+        </div>
+        <div>
+          <h3 class="text-[#64ffda] font-semibold mb-2">Groups</h3>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-1">
+            ${currentData.groups.map(g =>
+              `<p class="text-gray-300 text-sm px-2 py-1 rounded bg-blue-900/20">
+                 ${g.name} <span class="text-gray-500">(${g.role})</span>
+               </p>`
+            ).join("") || '<p class="text-gray-500 text-sm">No groups found.</p>'}
+          </div>
+        </div>`;
+    }
+  }
+
+  document.getElementById("lookupBtn").onclick = async () => {
+    const input      = document.getElementById("userInput").value.trim();
+    const avatarType = document.getElementById("avatarType").value;
+    if (!input) return;
+
+    contentBox.innerHTML = skeleton();
+    avatarRow.classList.add("hidden");
+    avatarImg.style.opacity = 0;
+
+    const res  = await fetch(`/api/full?query=${encodeURIComponent(input)}&avatar=${avatarType}`);
+    const data = await res.json();
+
+    if (data.error) {
+      contentBox.innerHTML = `<p class="text-red-400 text-center py-8">${data.error}</p>`;
+      return;
+    }
+
+    currentData = data;
+
+    // Show avatar row with summary
+    avatarImg.src = data.avatar;
+    avatarImg.onload = () => { avatarImg.style.opacity = 1; };
+    avatarMeta.innerHTML = `
+      <p class="font-bold text-white">${data.username}</p>
+      <p class="text-gray-400 text-xs">${data.displayName}</p>
+      <p class="text-xs mt-1 ${data.status === 'In Game' ? 'text-green-400' : data.status === 'Online' ? 'text-blue-400' : 'text-gray-500'}">
+        ● ${data.status}
+      </p>`;
+    avatarRow.classList.remove("hidden");
+    avatarRow.classList.add("flex");
+
+    render();
+  };
+
+  // Allow Enter key to trigger lookup
+  document.getElementById("userInput").addEventListener("keydown", e => {
+    if (e.key === "Enter") document.getElementById("lookupBtn").click();
+  });
+</script>
+{% endblock %}

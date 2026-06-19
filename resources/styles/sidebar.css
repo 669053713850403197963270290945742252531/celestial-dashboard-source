@@ -26,6 +26,21 @@
   transform: translateX(0);
 }
 
+#sidebar-toggle {
+  position: fixed !important;
+  top: 1rem !important;
+  left: 1rem !important;
+  width: 36px !important;
+  height: 36px !important;
+  z-index: 50;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.5rem;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
 /* Desktop: always visible, participates in flex flow */
 @media (min-width: 1024px) {
   #sidebar {

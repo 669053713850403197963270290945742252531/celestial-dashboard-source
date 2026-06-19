@@ -441,24 +441,25 @@ def api_github_update_users():
         if not users:
             return jsonify(success=False, error="Missing users"), 400
 
+        # Normalize field order before committing
+        normalized = [normalize_user(u) for u in users]
+
         url = f"https://api.github.com/repos/{GITHUB_USER}/{GITHUB_REPO}/contents/{GITHUB_FILE}"
         payload = {
-            "message": "Update whitelist data via dashboard",
-            "content": base64.b64encode(json.dumps(users, indent=4).encode()).decode(),
+            "message": "",
+            "content": base64.b64encode(json.dumps(normalized, indent=4).encode()).decode(),
             "sha": sha,
             "branch": GITHUB_BRANCH,
         }
 
         res = requests.put(url, headers=get_github_headers(), json=payload)
 
-        # If 409, fetch latest SHA and retry
         if res.status_code == 409:
             latest = requests.get(
                 url, headers=get_github_headers(), params={"ref": GITHUB_BRANCH}
             )
             latest.raise_for_status()
             latest_sha = latest.json()["sha"]
-
             payload["sha"] = latest_sha
             res = requests.put(url, headers=get_github_headers(), json=payload)
 

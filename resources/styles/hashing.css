@@ -1,0 +1,95 @@
+.glow-card {
+  box-shadow: 0 0 15px rgba(100, 255, 218, 0.1);
+}
+.glow-text {
+  text-shadow: 0 0 10px rgba(100, 255, 218, 0.4);
+}
+
+.copy-btn {
+  background: rgba(0, 255, 170, 0.08);
+  border: 1px solid rgba(100, 255, 218, 0.4);
+  color: #64ffda;
+  border-radius: 0.5rem;
+  transition: all 0.25s ease-in-out;
+  box-shadow: 0 0 8px rgba(100, 255, 218, 0.15);
+}
+.copy-btn:hover {
+  background: rgba(0, 255, 170, 0.15);
+  box-shadow: 0 0 12px rgba(100, 255, 218, 0.35);
+  transform: scale(1.05);
+}
+
+#historyModal {
+  opacity: 0;
+  transform: scale(0.97);
+  transition:
+    opacity 0.3s ease-in-out,
+    transform 0.3s ease-in-out;
+}
+#historyModal.show {
+  opacity: 1;
+  transform: scale(1);
+}
+#historyModal.fade-out {
+  opacity: 0;
+  transform: scale(0.97);
+}
+#historyTable tr:hover {
+  background-color: rgba(100, 255, 218, 0.08);
+}
+
+/* Truncate long hashes in the table on mobile */
+#historyTable td:last-child {
+  max-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.custom-checkbox {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  cursor: pointer;
+  user-select: none;
+  gap: 0.5rem;
+}
+.custom-checkbox input[type="checkbox"] {
+  position: absolute;
+  opacity: 0;
+  cursor: pointer;
+  height: 0;
+  width: 0;
+}
+.custom-checkbox span.checkmark {
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+  background: rgba(0, 255, 170, 0.1);
+  border: 2px solid #64ffda;
+  border-radius: 0.375rem;
+  display: inline-block;
+  transition: all 0.2s ease-in-out;
+  box-shadow: 0 0 5px rgba(100, 255, 218, 0.2);
+  position: relative;
+}
+.custom-checkbox input:checked + .checkmark {
+  background: #64ffda;
+  box-shadow: 0 0 8px #64ffda;
+  border-color: #64ffda;
+}
+.custom-checkbox .checkmark::after {
+  content: "";
+  position: absolute;
+  display: none;
+}
+.custom-checkbox input:checked + .checkmark::after {
+  display: block;
+  left: 5px;
+  top: 1px;
+  width: 6px;
+  height: 12px;
+  border: solid white;
+  border-width: 0 2px 2px 0;
+  transform: rotate(45deg);
+}

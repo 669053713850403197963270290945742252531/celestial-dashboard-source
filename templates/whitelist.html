@@ -3,7 +3,6 @@
 {% block content %}
 <script src="https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.43.0/min/vs/loader.min.js"></script>
 <link rel="stylesheet" href="/resources/styles/whitelist.css">
-<body data-page="{{ page_title }}">
 
 <div class="min-h-screen py-10 px-6 bg-transparent text-white">
   <div class="max-w-5xl mx-auto">
@@ -15,58 +14,95 @@
     <div id="diffContainer" class="diff-summary"></div>
 
     <!-- Monaco Editor -->
-    <div id="jsonEditor" class="bg-blue-950/50 border border-blue-800 rounded-2xl glow-card p-2 mb-4 transition-all duration-300"></div>
+    <div id="jsonEditor"
+      class="bg-blue-950/50 border border-blue-800 rounded-2xl glow-card p-2 mb-4 transition-all duration-300"></div>
 
     <!-- Action Buttons -->
-    <div class="flex flex-wrap justify-center gap-2 sm:gap-4">
-      <button id="discardBtn" class="px-6 py-3 rounded-lg font-semibold border border-cyan-500 text-cyan-300 hover:bg-cyan-500/20 hover:scale-105 transition-all duration-300">Discard Changes</button>
+    <div class="action-row mt-4">
+      <button id="discardBtn"
+        class="ripple-target px-6 py-3 rounded-lg font-semibold border border-cyan-500 text-cyan-300 hover:bg-cyan-500/20 hover:scale-105 transition-all duration-300">
+        Discard Changes
+      </button>
 
-      <button id="applyBtn" class="px-6 py-3 rounded-lg font-semibold border border-green-500 text-green-300 hover:bg-green-500/20 hover:scale-105 transition-all duration-300">Apply Changes</button>
+      <button id="applyBtn"
+        class="ripple-target px-6 py-3 rounded-lg font-semibold border border-green-500 text-green-300 hover:bg-green-500/20 hover:scale-105 transition-all duration-300">
+        Apply Changes
+      </button>
 
-      <div class="relative">
-        <select id="fileTypeSelect" class="bg-blue-950/50 border border-blue-700 rounded-lg px-3 py-2 text-sm text-gray-300 focus:ring-2 focus:ring-cyan-400 focus:outline-none transition-all duration-300">
+      <div class="export-group">
+        <select id="fileTypeSelect"
+          class="bg-blue-950/50 border border-blue-700 rounded-lg px-3 py-2 text-sm text-gray-300 focus:ring-2 focus:ring-cyan-400 focus:outline-none transition-all duration-300">
           <option value="json">JSON</option>
           <option value="csv">CSV</option>
         </select>
 
-        <button id="exportBtn" class="ripple-target ml-3 px-6 py-3 rounded-lg font-semibold border border-yellow-500 text-yellow-300 hover:bg-yellow-500/20 hover:scale-105 transition-all duration-300">Export</button>
+        <button id="exportBtn"
+          class="ripple-target px-6 py-3 rounded-lg font-semibold border border-yellow-500 text-yellow-300 hover:bg-yellow-500/20 hover:scale-105 transition-all duration-300">
+          Export
+        </button>
 
-        <label for="importFile" class="ripple-target ml-3 px-6 py-3 rounded-lg font-semibold border border-purple-500 text-purple-300 hover:bg-purple-500/20 hover:scale-105 transition-all duration-300 cursor-pointer">Import</label>
+        <label for="importFile"
+          class="ripple-target px-6 py-3 rounded-lg font-semibold border border-purple-500 text-purple-300 hover:bg-purple-500/20 hover:scale-105 transition-all duration-300 cursor-pointer">
+          Import
+        </label>
         <input id="importFile" type="file" class="hidden" accept=".json,.csv" />
       </div>
     </div>
   </div>
 </div>
+</div>
 
 <script type="module">
-import { createToast, createDialog } from '/resources/scripts/ui-notifs.js';
+  import { createToast, createDialog } from '/resources/scripts/ui-notifs.js';
 
-// Expose globally for non-module scripts
-window.createToast = createToast;
-window.createDialog = createDialog;
+  // Expose globally for non-module scripts
+  window.createToast = createToast;
+  window.createDialog = createDialog;
 
-document.addEventListener("DOMContentLoaded", async () => {
-  const discardBtn = document.getElementById("discardBtn");
-  const applyBtn   = document.getElementById("applyBtn");
-  const exportBtn  = document.getElementById("exportBtn");
-  const importFile = document.getElementById("importFile");
-  const fileTypeSelect = document.getElementById("fileTypeSelect");
+  document.addEventListener("DOMContentLoaded", async () => {
+    const discardBtn = document.getElementById("discardBtn");
+    const applyBtn = document.getElementById("applyBtn");
+    const exportBtn = document.getElementById("exportBtn");
+    const importFile = document.getElementById("importFile");
+    const fileTypeSelect = document.getElementById("fileTypeSelect");
 
-  // Search box inserted above the editor
-  const searchBox = document.createElement("input");
-  searchBox.placeholder = "Search Identifier, Discord ID, etc...";
-  searchBox.className = "w-full mb-4 p-2 rounded bg-blue-950/50 border border-blue-700 text-gray-200 focus:ring-2 focus:ring-cyan-400";
-  document.getElementById("jsonEditor").insertAdjacentElement("beforebegin", searchBox);
+    // Search box inserted above the editor
+    const searchBox = document.createElement("input");
+    searchBox.placeholder = "Search Identifier, Discord ID, etc...";
+    searchBox.className = "search-input";
+    searchBox.style.cssText = `
+      display: block;
+      width: 100%;
+      margin-bottom: 1rem;
+      padding: 0.625rem 0.75rem;
+      border-radius: 0.5rem;
+      background: rgba(7, 18, 35, 0.7);
+      border: 1px solid rgba(100, 255, 218, 0.15);
+      color: #e2e8f0;
+      font-size: 0.875rem;
+      box-sizing: border-box;
+      outline: none;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    `;
+    searchBox.addEventListener('focus', () => {
+      searchBox.style.borderColor = '#64ffda';
+      searchBox.style.boxShadow = '0 0 12px rgba(100,255,218,0.3), inset 0 0 10px rgba(100,255,218,0.15)';
+    });
+    searchBox.addEventListener('blur', () => {
+      searchBox.style.borderColor = 'rgba(100, 255, 218, 0.15)';
+      searchBox.style.boxShadow = '0 0 8px rgba(100,255,218,0.05)';
+    });
+    document.getElementById("jsonEditor").insertAdjacentElement("beforebegin", searchBox);
 
-  // diff summary container
-  const diffContainer = document.createElement("div");
-  diffContainer.className = "text-sm text-gray-400 mb-3";
-  document.getElementById("jsonEditor").insertAdjacentElement("beforebegin", diffContainer);
+    // diff summary container
+    const diffContainer = document.createElement("div");
+    diffContainer.className = "text-sm text-gray-400 mb-3";
+    document.getElementById("jsonEditor").insertAdjacentElement("beforebegin", diffContainer);
 
-  // modal DOM (append to body)
-  const modalBackdrop = document.createElement("div");
-  modalBackdrop.className = "import-modal-backdrop";
-  modalBackdrop.innerHTML = `
+    // modal DOM (append to body)
+    const modalBackdrop = document.createElement("div");
+    modalBackdrop.className = "import-modal-backdrop";
+    modalBackdrop.innerHTML = `
     <div class="import-modal" role="dialog" aria-modal="true">
       <h3 style="color:#64ffda;margin:0 0 6px 0;font-weight:700">Import Differences</h3>
       <div id="importSummary" style="margin-bottom:8px;color:#bfeee6"></div>
@@ -76,349 +112,349 @@ document.addEventListener("DOMContentLoaded", async () => {
         <button id="confirmImport" class="px-3 py-2 rounded border border-green-500 text-green-300">Confirm</button>
       </div>
     </div>`;
-  document.body.appendChild(modalBackdrop);
+    document.body.appendChild(modalBackdrop);
 
-  // helper: show/hide modal
-  function showModal(added, removed, onConfirm) {
-    document.getElementById("importSummary").innerHTML = `<span class="diff-count added">+ ${added.length} Added</span> &nbsp; | &nbsp; <span class="diff-count removed">- ${removed.length} Removed</span>`;
-    const details = document.getElementById("importDiffDetails");
-    let html = "";
-    if (added.length) html += `<div style="margin-top:6px"><div class="added">Added:</div><ul class="details-list">${added.map(a=>`<li>${escapeHtml(a)}</li>`).join("")}</ul></div>`;
-    if (removed.length) html += `<div style="margin-top:6px"><div class="removed">Removed:</div><ul class="details-list">${removed.map(r=>`<li>${escapeHtml(r)}</li>`).join("")}</ul></div>`;
-    details.innerHTML = html || `<div style="color:#9fbfb2">No identifier additions/removals detected.</div>`;
-    modalBackdrop.style.display = "flex";
-    // animate
-    const mx = modalBackdrop.querySelector(".import-modal");
-    setTimeout(()=> mx.classList.add("show"), 10);
+    // helper: show/hide modal
+    function showModal(added, removed, onConfirm) {
+      document.getElementById("importSummary").innerHTML = `<span class="diff-count added">+ ${added.length} Added</span> &nbsp; | &nbsp; <span class="diff-count removed">- ${removed.length} Removed</span>`;
+      const details = document.getElementById("importDiffDetails");
+      let html = "";
+      if (added.length) html += `<div style="margin-top:6px"><div class="added">Added:</div><ul class="details-list">${added.map(a => `<li>${escapeHtml(a)}</li>`).join("")}</ul></div>`;
+      if (removed.length) html += `<div style="margin-top:6px"><div class="removed">Removed:</div><ul class="details-list">${removed.map(r => `<li>${escapeHtml(r)}</li>`).join("")}</ul></div>`;
+      details.innerHTML = html || `<div style="color:#9fbfb2">No identifier additions/removals detected.</div>`;
+      modalBackdrop.style.display = "flex";
+      // animate
+      const mx = modalBackdrop.querySelector(".import-modal");
+      setTimeout(() => mx.classList.add("show"), 10);
 
-    const confirmBtn = document.getElementById("confirmImport");
-    const cancelBtn  = document.getElementById("cancelImport");
-    confirmBtn.classList.add("pulse");
+      const confirmBtn = document.getElementById("confirmImport");
+      const cancelBtn = document.getElementById("cancelImport");
+      confirmBtn.classList.add("pulse");
 
-    function cleanup() {
-      mx.classList.remove("show");
-      setTimeout(()=> modalBackdrop.style.display="none", 180);
-      confirmBtn.classList.remove("pulse");
-      cancelBtn.onclick = null;
-      confirmBtn.onclick = null;
-    }
-    cancelBtn.onclick = () => {
-      cleanup();
-      importFile.value = "";
-    };
-    confirmBtn.onclick = () => {
-      cleanup();
-      onConfirm();
-      importFile.value = "";
-    };
-  }
-
-  function escapeHtml(s){ return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
-
-  // canonical order
-  const canonicalFields = ["Identifier","HWID","DiscordId","Key","JoinDate","Rank","Notes"];
-  let currentSha = null;
-  let originalContent = "";
-  let editor;
-  let decorations = [];
-
-  // robust CSV line parser which honors quotes (handles fields with commas)
-  function parseCSVLine(line) {
-    const out = []; let cur = "", inQuotes = false;
-    for (let i=0;i<line.length;i++){
-      const ch = line[i];
-      if (ch === '"') {
-        if (inQuotes && line[i+1] === '"') { cur += '"'; i++; }
-        else { inQuotes = !inQuotes; }
-        continue;
+      function cleanup() {
+        mx.classList.remove("show");
+        setTimeout(() => modalBackdrop.style.display = "none", 180);
+        confirmBtn.classList.remove("pulse");
+        cancelBtn.onclick = null;
+        confirmBtn.onclick = null;
       }
-      if (ch === ',' && !inQuotes) { out.push(cur); cur=''; continue; }
-      cur += ch;
+      cancelBtn.onclick = () => {
+        cleanup();
+        importFile.value = "";
+      };
+      confirmBtn.onclick = () => {
+        cleanup();
+        onConfirm();
+        importFile.value = "";
+      };
     }
-    out.push(cur);
-    return out.map(s => s === "" ? null : s);
-  }
 
-  // build CSV string for export (canonical order)
-  function buildCSV(users) {
-    const header = canonicalFields.join(",");
-    const rows = users.map(u => canonicalFields.map(k => {
-      const v = u[k] === null || u[k] === undefined ? "" : String(u[k]);
-      // escape
-      if (/[",\n\r]/.test(v)) return `"${v.replace(/"/g,'""')}"`;
-      return v;
-    }).join(","));
-    return header + "\n" + rows.join("\n");
-  }
+    function escapeHtml(s) { return String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c])); }
 
-  // Monaco init
-  require.config({ paths: { vs: 'https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.43.0/min/vs' }});
-  require(['vs/editor/editor.main'], async function() {
-    editor = monaco.editor.create(document.getElementById('jsonEditor'), {
-      value: '',
-      language: 'json',
-      theme: 'vs-dark',
-      automaticLayout: true,
-      minimap: { enabled: false },
-      scrollBeyondLastLine: false,
-      fontFamily: 'monospace',
-      fontSize: 13
-    });
+    // canonical order
+    const canonicalFields = ["Identifier", "HWID", "DiscordId", "Key", "JoinDate", "Rank", "Notes"];
+    let currentSha = null;
+    let originalContent = "";
+    let editor;
+    let decorations = [];
 
-    editor.onDidChangeModelContent(()=> {
-      // clear decorations when content edited
-      decorations = editor.deltaDecorations(decorations, []);
-    });
-
-    await loadWhitelist();
-  });
-
-  // load current file from backend
-  async function loadWhitelist() {
-    try {
-      const res = await fetch("/api/github_users");
-      const data = await res.json();
-      if (!data.users) throw new Error("Failed to load data");
-      // ensure canonical order locally
-      const canonicalUsers = data.users.map(u => canonicalFields.reduce((o,k)=>{ o[k] = u[k] ?? null; return o; }, {}));
-      const formatted = JSON.stringify(canonicalUsers, null, 4);
-      editor.setValue(formatted);
-      originalContent = formatted;
-      currentSha = data.sha;
-      diffContainer.innerHTML = "";
-      createToast("Loaded whitelist data.", "success")
-    } catch (err) {
-      createToast("Error loading whitelist data.", "error")
+    // robust CSV line parser which honors quotes (handles fields with commas)
+    function parseCSVLine(line) {
+      const out = []; let cur = "", inQuotes = false;
+      for (let i = 0; i < line.length; i++) {
+        const ch = line[i];
+        if (ch === '"') {
+          if (inQuotes && line[i + 1] === '"') { cur += '"'; i++; }
+          else { inQuotes = !inQuotes; }
+          continue;
+        }
+        if (ch === ',' && !inQuotes) { out.push(cur); cur = ''; continue; }
+        cur += ch;
+      }
+      out.push(cur);
+      return out.map(s => s === "" ? null : s);
     }
-  }
 
-  // validation
-  function validateWhitelist(users) {
-    if (!Array.isArray(users)) throw new Error("Whitelist must be a JSON array.");
-    for (const [i,u] of users.entries()){
-      if (typeof u !== "object" || u === null) throw new Error(`Entry #${i+1} is not an object`);
-      for (const f of canonicalFields) if (!(f in u)) throw new Error(`Entry #${i+1} missing field: ${f}`);
+    // build CSV string for export (canonical order)
+    function buildCSV(users) {
+      const header = canonicalFields.join(",");
+      const rows = users.map(u => canonicalFields.map(k => {
+        const v = u[k] === null || u[k] === undefined ? "" : String(u[k]);
+        // escape
+        if (/[",\n\r]/.test(v)) return `"${v.replace(/"/g, '""')}"`;
+        return v;
+      }).join(","));
+      return header + "\n" + rows.join("\n");
     }
-    if (users.length === 0) throw new Error("Whitelist cannot be empty.");
-    return true;
-  }
 
-  // discard
-  discardBtn.addEventListener("click", async ()=>{
-    if (editor.getValue().trim() === originalContent.trim()){
-      createToast("No changes to discard.", "info")
-      return;
-    }
-    discardBtn.disabled = true;
-    createToast("Discarding changes...", "info")
-    await loadWhitelist();
-    discardBtn.disabled = false;
-  });
-
-  // apply
-  applyBtn.addEventListener("click", async ()=>{
-    if (editor.getValue().trim() === originalContent.trim()){
-      createToast("No changes detected to commit.", "info")
-      return;
-    }
-    try {
-      const users = JSON.parse(editor.getValue());
-      validateWhitelist(users);
-      createToast("Applying changes...", "info")
-      let res = await fetch("/api/github_update_users", {
-        method: "POST",
-        headers: {"Content-Type":"application/json"},
-        body: JSON.stringify({ users, sha: currentSha }),
+    // Monaco init
+    require.config({ paths: { vs: 'https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.43.0/min/vs' } });
+    require(['vs/editor/editor.main'], async function () {
+      editor = monaco.editor.create(document.getElementById('jsonEditor'), {
+        value: '',
+        language: 'json',
+        theme: 'vs-dark',
+        automaticLayout: true,
+        minimap: { enabled: false },
+        scrollBeyondLastLine: false,
+        fontFamily: 'monospace',
+        fontSize: 13
       });
-      let result = await res.json();
-      if (!result.success && res.status === 409) {
-        createToast("SHA conflict detected; retrying with latest SHA...", "info")
-        const latestRes = await fetch("/api/github_users");
-        const latestData = await latestRes.json();
-        currentSha = latestData.sha;
-        res = await fetch("/api/github_update_users", {
+
+      editor.onDidChangeModelContent(() => {
+        // clear decorations when content edited
+        decorations = editor.deltaDecorations(decorations, []);
+      });
+
+      await loadWhitelist();
+    });
+
+    // load current file from backend
+    async function loadWhitelist() {
+      try {
+        const res = await fetch("/api/github_users");
+        const data = await res.json();
+        if (!data.users) throw new Error("Failed to load data");
+        // ensure canonical order locally
+        const canonicalUsers = data.users.map(u => canonicalFields.reduce((o, k) => { o[k] = u[k] ?? null; return o; }, {}));
+        const formatted = JSON.stringify(canonicalUsers, null, 4);
+        editor.setValue(formatted);
+        originalContent = formatted;
+        currentSha = data.sha;
+        diffContainer.innerHTML = "";
+        createToast("Loaded whitelist data.", "success")
+      } catch (err) {
+        createToast("Error loading whitelist data.", "error")
+      }
+    }
+
+    // validation
+    function validateWhitelist(users) {
+      if (!Array.isArray(users)) throw new Error("Whitelist must be a JSON array.");
+      for (const [i, u] of users.entries()) {
+        if (typeof u !== "object" || u === null) throw new Error(`Entry #${i + 1} is not an object`);
+        for (const f of canonicalFields) if (!(f in u)) throw new Error(`Entry #${i + 1} missing field: ${f}`);
+      }
+      if (users.length === 0) throw new Error("Whitelist cannot be empty.");
+      return true;
+    }
+
+    // discard
+    discardBtn.addEventListener("click", async () => {
+      if (editor.getValue().trim() === originalContent.trim()) {
+        createToast("No changes to discard.", "info")
+        return;
+      }
+      discardBtn.disabled = true;
+      createToast("Discarding changes...", "info")
+      await loadWhitelist();
+      discardBtn.disabled = false;
+    });
+
+    // apply
+    applyBtn.addEventListener("click", async () => {
+      if (editor.getValue().trim() === originalContent.trim()) {
+        createToast("No changes detected to commit.", "info")
+        return;
+      }
+      try {
+        const users = JSON.parse(editor.getValue());
+        validateWhitelist(users);
+        createToast("Applying changes...", "info")
+        let res = await fetch("/api/github_update_users", {
           method: "POST",
-          headers: {"Content-Type":"application/json"},
+          headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ users, sha: currentSha }),
         });
-        result = await res.json();
+        let result = await res.json();
+        if (!result.success && res.status === 409) {
+          createToast("SHA conflict detected; retrying with latest SHA...", "info")
+          const latestRes = await fetch("/api/github_users");
+          const latestData = await latestRes.json();
+          currentSha = latestData.sha;
+          res = await fetch("/api/github_update_users", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ users, sha: currentSha }),
+          });
+          result = await res.json();
+        }
+        if (result.success) {
+          applyBtn.style.boxShadow = "0 0 15px #00ff99";
+          setTimeout(() => applyBtn.style.boxShadow = "", 600);
+          createToast("Changes successfully saved.", "success")
+          originalContent = editor.getValue();
+        } else throw new Error(result.error || "Unknown error");
+      } catch (err) {
+        createToast("Failed to apply changes: " + err.message, "error")
       }
-      if (result.success) {
-        applyBtn.style.boxShadow = "0 0 15px #00ff99";
-        setTimeout(()=> applyBtn.style.boxShadow = "", 600);
-        createToast("Changes successfully saved.", "success")
-        originalContent = editor.getValue();
-      } else throw new Error(result.error || "Unknown error");
-    } catch (err) {
-      createToast("Failed to apply changes: " + err.message, "error")
-    }
-  });
+    });
 
-  // export handler
-  exportBtn.addEventListener("click", ()=>{
-    try {
-      const users = JSON.parse(editor.getValue());
-      validateWhitelist(users);
-      const type = fileTypeSelect.value;
-      let blob, filename;
-      if (type === "json") {
-        const ordered = users.map(u => canonicalFields.reduce((o,k)=>{ o[k] = u[k] ?? null; return o; }, {}));
-        blob = new Blob([JSON.stringify(ordered, null, 4)], {type:"application/json"});
-        filename = "whitelist.json";
-      } else {
-        const csv = buildCSV(users);
-        blob = new Blob([csv], {type:"text/csv;charset=utf-8;"});
-        filename = "whitelist.csv";
+    // export handler
+    exportBtn.addEventListener("click", () => {
+      try {
+        const users = JSON.parse(editor.getValue());
+        validateWhitelist(users);
+        const type = fileTypeSelect.value;
+        let blob, filename;
+        if (type === "json") {
+          const ordered = users.map(u => canonicalFields.reduce((o, k) => { o[k] = u[k] ?? null; return o; }, {}));
+          blob = new Blob([JSON.stringify(ordered, null, 4)], { type: "application/json" });
+          filename = "whitelist.json";
+        } else {
+          const csv = buildCSV(users);
+          blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+          filename = "whitelist.csv";
+        }
+        const link = document.createElement("a");
+        link.href = URL.createObjectURL(blob);
+        link.download = filename;
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+        URL.revokeObjectURL(link.href);
+        createToast(`Exported file (${type.toUpperCase()}).`, "success")
+      } catch (err) {
+        createToast("Exported failed: " + (err.message || err, "error"))
       }
-      const link = document.createElement("a");
-      link.href = URL.createObjectURL(blob);
-      link.download = filename;
-      document.body.appendChild(link);
-      link.click();
-      link.remove();
-      URL.revokeObjectURL(link.href);
-      createToast(`Exported file (${type.toUpperCase()}).`, "success")
-    } catch (err) {
-      createToast("Exported failed: " + (err.message || err, "error"))
-    }
-  });
+    });
 
-  // import handler with robust CSV parsing and modal diff
-  importFile.addEventListener("change", async (e)=>{
-    const file = e.target.files?.[0];
-    if (!file) { createToast("Imported cancelled."); importFile.value="", "error"; return; }
-    const filename = file.name.toLowerCase();
-    const type = filename.endsWith(".csv") ? "csv" : "json";
-    try {
-      const text = await file.text();
-      let users;
-      if (type === "json") {
-        // try to unwrap odd nested arrays from GitHub endpoints gracefully
-        let parsed = JSON.parse(text.replace(/^\uFEFF/,""));
-        while (Array.isArray(parsed) && parsed.length === 1 && Array.isArray(parsed[0])) parsed = parsed[0];
-        if (!Array.isArray(parsed)) throw new Error("JSON must be an array of user objects.");
-        users = parsed.map(u => canonicalFields.reduce((o,k)=>{ o[k] = u[k] ?? null; return o; }, {}));
-      } else {
-        const lines = text.split(/\r?\n/).filter(Boolean);
-        if (lines.length === 0) throw new Error("CSV is empty");
-        const header = parseCSVLine(lines[0]).map(h=>h?.trim() ?? "");
-        const rows = lines.slice(1);
-        users = rows.map(r => {
-          const cols = parseCSVLine(r);
-          const obj = {};
-          header.forEach((h,i) => { obj[h] = cols[i] ?? null; });
-          // reorder to canonical
-          return canonicalFields.reduce((o,k)=>{ o[k] = obj[k] ?? null; return o; }, {});
+    // import handler with robust CSV parsing and modal diff
+    importFile.addEventListener("change", async (e) => {
+      const file = e.target.files?.[0];
+      if (!file) { createToast("Imported cancelled."); importFile.value = "", "error"; return; }
+      const filename = file.name.toLowerCase();
+      const type = filename.endsWith(".csv") ? "csv" : "json";
+      try {
+        const text = await file.text();
+        let users;
+        if (type === "json") {
+          // try to unwrap odd nested arrays from GitHub endpoints gracefully
+          let parsed = JSON.parse(text.replace(/^\uFEFF/, ""));
+          while (Array.isArray(parsed) && parsed.length === 1 && Array.isArray(parsed[0])) parsed = parsed[0];
+          if (!Array.isArray(parsed)) throw new Error("JSON must be an array of user objects.");
+          users = parsed.map(u => canonicalFields.reduce((o, k) => { o[k] = u[k] ?? null; return o; }, {}));
+        } else {
+          const lines = text.split(/\r?\n/).filter(Boolean);
+          if (lines.length === 0) throw new Error("CSV is empty");
+          const header = parseCSVLine(lines[0]).map(h => h?.trim() ?? "");
+          const rows = lines.slice(1);
+          users = rows.map(r => {
+            const cols = parseCSVLine(r);
+            const obj = {};
+            header.forEach((h, i) => { obj[h] = cols[i] ?? null; });
+            // reorder to canonical
+            return canonicalFields.reduce((o, k) => { o[k] = obj[k] ?? null; return o; }, {});
+          });
+        }
+        validateWhitelist(users);
+
+        // compute diff
+        const current = JSON.parse(originalContent);
+        const currIds = new Set(current.map(u => u.Identifier));
+        const newIds = new Set(users.map(u => u.Identifier));
+        const added = users.filter(u => !currIds.has(u.Identifier)).map(u => u.Identifier);
+        const removed = current.filter(u => !newIds.has(u.Identifier)).map(u => u.Identifier);
+
+        // show modal; on confirm put parsed content into editor
+        showModal(added, removed, () => {
+          editor.setValue(JSON.stringify(users, null, 4));
+          createToast(`Imported ${file.name} (${type.toUpperCase()}) into editor (confirm commit to push).`, "success")
+        });
+
+      } catch (err) {
+        createToast(`Import failed: ${err.message}`, "error")
+      } finally {
+        importFile.value = "";
+      }
+    });
+
+    // Search: highlight (non-destructive) using decorations variable
+    searchBox.addEventListener("input", () => {
+      const query = searchBox.value.trim();
+      if (!editor) return;
+      const model = editor.getModel();
+      decorations = editor.deltaDecorations(decorations, []); // clear old
+
+      if (!query) return;
+
+      const regex = new RegExp(query.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"), "gi");
+      const text = model.getValue();
+      const newDec = [];
+      let match;
+
+      while ((match = regex.exec(text)) !== null) {
+        const start = model.getPositionAt(match.index);
+        const end = model.getPositionAt(match.index + match[0].length);
+        newDec.push({
+          range: new monaco.Range(start.lineNumber, start.column, end.lineNumber, end.column),
+          options: { inlineClassName: "highlighted-text" }
         });
       }
-      validateWhitelist(users);
 
-      // compute diff
-      const current = JSON.parse(originalContent);
-      const currIds = new Set(current.map(u=>u.Identifier));
-      const newIds = new Set(users.map(u=>u.Identifier));
-      const added = users.filter(u => !currIds.has(u.Identifier)).map(u=>u.Identifier);
-      const removed = current.filter(u => !newIds.has(u.Identifier)).map(u=>u.Identifier);
-
-      // show modal; on confirm put parsed content into editor
-      showModal(added, removed, ()=> {
-        editor.setValue(JSON.stringify(users, null, 4));
-        createToast(`Imported ${file.name} (${type.toUpperCase()}) into editor (confirm commit to push).`, "success")
-      });
-
-    } catch (err) {
-      createToast(`Import failed: ${err.message}`, "error")
-    } finally {
-      importFile.value = "";
-    }
-  });
-
-  // Search: highlight (non-destructive) using decorations variable
-  searchBox.addEventListener("input", () => {
-    const query = searchBox.value.trim();
-    if (!editor) return;
-    const model = editor.getModel();
-    decorations = editor.deltaDecorations(decorations, []); // clear old
-
-    if (!query) return;
-
-    const regex = new RegExp(query.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"), "gi");
-    const text = model.getValue();
-    const newDec = [];
-    let match;
-
-    while ((match = regex.exec(text)) !== null) {
-      const start = model.getPositionAt(match.index);
-      const end = model.getPositionAt(match.index + match[0].length);
-      newDec.push({
-        range: new monaco.Range(start.lineNumber, start.column, end.lineNumber, end.column),
-        options: { inlineClassName: "highlighted-text" }
-      });
-    }
-
-    decorations = editor.deltaDecorations([], newDec);
-    if (newDec.length) editor.revealRangeInCenter(newDec[0].range);
-  });
-
-  // Create ripples on click for all .ripple-target elements
-(function attachRipples() {
-  function makeRipple(e) {
-    const tgt = e.currentTarget;
-    // ignore right-click, ctrl/meta click etc
-    if (e.button && e.button !== 0) return;
-
-    const rect = tgt.getBoundingClientRect();
-    const dx = e.clientX - rect.left;
-    const dy = e.clientY - rect.top;
-
-    // size: cover the farthest corner
-    const maxX = Math.max(dx, rect.width - dx);
-    const maxY = Math.max(dy, rect.height - dy);
-    const radius = Math.sqrt(maxX * maxX + maxY * maxY);
-
-    const ripple = document.createElement('span');
-    ripple.className = 'ripple';
-    // set px dimensions so it's perfectly clipped
-    const size = Math.ceil(radius * 2);
-    ripple.style.width = ripple.style.height = size + 'px';
-    // center the ripple on click
-    ripple.style.left = (dx - size / 2) + 'px';
-    ripple.style.top  = (dy - size / 2) + 'px';
-
-    // append and remove after animation
-    tgt.appendChild(ripple);
-    ripple.addEventListener('animationend', () => {
-      ripple.remove();
-    }, { once: true });
-
-    // also remove if element is removed unexpectedly
-    setTimeout(() => ripple.remove(), 900);
-  }
-
-  // selector: include the import label as well
-  function init() {
-    // make sure import label behaves like a button
-    const importLabel = document.querySelector('label[for="importFile"]');
-    if (importLabel) importLabel.classList.add('ripple-target');
-
-    // add ripple-target class to all buttons if not present
-    document.querySelectorAll('button').forEach(b => {
-      if (!b.classList.contains('ripple-target')) b.classList.add('ripple-target');
+      decorations = editor.deltaDecorations([], newDec);
+      if (newDec.length) editor.revealRangeInCenter(newDec[0].range);
     });
 
-    // attach listener (use pointerdown for better responsiveness)
-    document.querySelectorAll('.ripple-target').forEach(el => {
-      // pointerdown gives better cross-device coords
-      el.addEventListener('pointerdown', makeRipple);
-    });
-  }
+    // Create ripples on click for all .ripple-target elements
+    (function attachRipples() {
+      function makeRipple(e) {
+        const tgt = e.currentTarget;
+        // ignore right-click, ctrl/meta click etc
+        if (e.button && e.button !== 0) return;
 
-  // init on DOM ready
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', init);
-  } else init();
-})();
+        const rect = tgt.getBoundingClientRect();
+        const dx = e.clientX - rect.left;
+        const dy = e.clientY - rect.top;
 
-});
+        // size: cover the farthest corner
+        const maxX = Math.max(dx, rect.width - dx);
+        const maxY = Math.max(dy, rect.height - dy);
+        const radius = Math.sqrt(maxX * maxX + maxY * maxY);
+
+        const ripple = document.createElement('span');
+        ripple.className = 'ripple';
+        // set px dimensions so it's perfectly clipped
+        const size = Math.ceil(radius * 2);
+        ripple.style.width = ripple.style.height = size + 'px';
+        // center the ripple on click
+        ripple.style.left = (dx - size / 2) + 'px';
+        ripple.style.top = (dy - size / 2) + 'px';
+
+        // append and remove after animation
+        tgt.appendChild(ripple);
+        ripple.addEventListener('animationend', () => {
+          ripple.remove();
+        }, { once: true });
+
+        // also remove if element is removed unexpectedly
+        setTimeout(() => ripple.remove(), 900);
+      }
+
+      // selector: include the import label as well
+      function init() {
+        // make sure import label behaves like a button
+        const importLabel = document.querySelector('label[for="importFile"]');
+        if (importLabel) importLabel.classList.add('ripple-target');
+
+        // add ripple-target class to all buttons if not present
+        document.querySelectorAll('button').forEach(b => {
+          if (!b.classList.contains('ripple-target')) b.classList.add('ripple-target');
+        });
+
+        // attach listener (use pointerdown for better responsiveness)
+        document.querySelectorAll('.ripple-target').forEach(el => {
+          // pointerdown gives better cross-device coords
+          el.addEventListener('pointerdown', makeRipple);
+        });
+      }
+
+      // init on DOM ready
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', init);
+      } else init();
+    })();
+
+  });
 </script>
 {% endblock %}
