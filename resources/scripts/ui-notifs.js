@@ -7,8 +7,13 @@ const notifStyles = `
   position: fixed;
   top: 1rem;
   right: 1rem;
+  left: 1rem;
+  max-width: calc(100vw - 2rem);
   display: flex;
   flex-direction: column;
+  align-items: flex-end;  /* toasts still right-align within the container */
+  z-index: 9999;
+  pointer-events: none;
 }
 .toast {
   margin-bottom: 0.5rem;
@@ -133,8 +138,9 @@ export function createToast(message, type = "info", duration = 3) {
     container.style.position = "fixed";
     container.style.top = "1rem";
     container.style.right = "1rem";
-    container.style.zIndex = "9999";
-    container.style.pointerEvents = "none";
+    container.style.left = "1rem";
+    container.style.maxWidth = "calc(100vw - 2rem)";  // replace the 350px
+    container.style.alignItems = "flex-end";
 
     container.style.display = "flex";
     container.style.flexDirection = "column";

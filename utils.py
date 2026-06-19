@@ -79,7 +79,7 @@ def fetch_users_from_github():
 def update_users_on_github(users, sha):
     url = f"https://api.github.com/repos/{GITHUB_USER}/{GITHUB_REPO}/contents/{GITHUB_FILE}"
     payload = {
-        "message": "Add new whitelist user",
+        "message": "",
         "content": base64.b64encode(json.dumps(users, indent=4).encode()).decode(),
         "sha": sha,
         "branch": GITHUB_BRANCH

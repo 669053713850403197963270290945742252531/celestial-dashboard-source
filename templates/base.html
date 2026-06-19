@@ -1,15 +1,59 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
+
+  <!-- Apply font BEFORE any stylesheet so --font-override is ready immediately -->
+  <script>
+    (function () {
+      try {
+        const match = document.cookie.match(/celestial_settings=([^;]+)/);
+        if (!match) return;
+        const settings = JSON.parse(decodeURIComponent(match[1]));
+        if (settings.font) {
+          // Set on :root so var() works in stylesheets
+          document.documentElement.style.setProperty(
+            '--font-override',
+            `"${settings.font}", ui-sans-serif, sans-serif`
+          );
+        }
+      } catch { }
+    })();
+  </script>
+
+  <!-- Early font variable -->
+  <script>
+    (function () {
+      try {
+        const match = document.cookie.match(/celestial_settings=([^;]+)/);
+        if (!match) return;
+        const settings = JSON.parse(decodeURIComponent(match[1]));
+        if (settings.font) {
+          document.documentElement.style.setProperty(
+            '--font-override',
+            `"${settings.font}", ui-sans-serif, sans-serif`
+          );
+        }
+      } catch { }
+    })();
+  </script>
+
   <title id="dynamic-title">
     {{ site_title }}{% if page_title %} - {{ page_title }}{% endif %}
   </title>
 
   <link rel="icon" href="/resources/images/icon.png" />
-  <script src="https://cdn.tailwindcss.com"></script>
 
+  <!-- Google Fonts — all fonts available on every page -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Arimo&family=DM+Sans&family=Lato&family=Lora&family=Merriweather&family=Nunito&family=Nunito+Sans&family=Noto+Sans&family=Open+Sans&family=Oswald&family=PT+Sans&family=Raleway&family=Roboto+Mono&family=Roboto+Slab&family=Rubik&family=Ubuntu&family=Work+Sans&family=Inter&family=Science+Gothic&display=swap"
+    rel="stylesheet">
+
+  <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="/resources/styles/base.css">
   <link rel="stylesheet" href="/resources/styles/ui-glass.css">
 
@@ -17,37 +61,48 @@
   <link rel="stylesheet" href="/resources/styles/sidebar.css">
 </head>
 
-<body class="app-bg text-white flex">
+<body class="app-bg text-white flex min-h-screen">
 
   <!-- Sidebar -->
-<aside id="sidebar">
-  <!-- Logo Area -->
-  <div class="logo">
-    <img id="sidebarIcon" src="{{ site_icon }}" class="w-10 h-10 rounded-md" />
-    <div>
-      <h1 id="sidebarTitle" class="text-lg font-bold glow-text">{{ site_title }}</h1>
-      <p class="text-muted text-xs">Control Panel</p>
+  <!-- Hamburger button (mobile only) -->
+  <button id="sidebar-toggle"
+    class="fixed top-4 left-4 z-50 p-2 rounded-lg bg-blue-900/40 border border-blue-700 text-white lg:hidden">
+    <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2">
+      <path d="M3 6h14M3 10h14M3 14h14" />
+    </svg>
+  </button>
+
+  <!-- Overlay (mobile only, behind open sidebar) -->
+  <div id="sidebar-overlay" class="fixed inset-0 bg-black/50 z-30 hidden lg:hidden"></div>
+
+  <aside id="sidebar">
+    <!-- Logo Area -->
+    <div class="logo">
+      <img id="sidebarIcon" src="{{ site_icon }}" class="w-10 h-10 rounded-md" />
+      <div>
+        <h1 id="sidebarTitle" class="text-lg font-bold glow-text">{{ site_title }}</h1>
+        <p class="text-muted text-xs">Control Panel</p>
+      </div>
     </div>
-  </div>
 
-  <!-- Navigation -->
-  <nav class="nav">
-    <a href="/dashboard" class="{% if request.path=='/dashboard' %}active{% endif %}">Dashboard</a>
-    <a href="/users" class="{% if '/users' in request.path %}active{% endif %}">User Management</a>
-    <a href="/whitelist" class="{% if '/whitelist' in request.path %}active{% endif %}">Whitelist Management</a>
-    <a href="/hashing" class="{% if '/hashing' in request.path %}active{% endif %}">Hashing</a>
-    <a href="/rbxlookup" class="{% if '/rbxlookup' in request.path %}active{% endif %}">Roblox User Lookup</a>
-    <a href="/settings" class="{% if '/settings' in request.path %}active{% endif %}">Settings</a>
-  </nav>
+    <!-- Navigation -->
+    <nav class="nav">
+      <a href="/dashboard" class="{% if request.path=='/dashboard' %}active{% endif %}">Dashboard</a>
+      <a href="/users" class="{% if '/users' in request.path %}active{% endif %}">User Management</a>
+      <a href="/whitelist" class="{% if '/whitelist' in request.path %}active{% endif %}">Whitelist Management</a>
+      <a href="/hashing" class="{% if '/hashing' in request.path %}active{% endif %}">Hashing</a>
+      <a href="/rbxlookup" class="{% if '/rbxlookup' in request.path %}active{% endif %}">Roblox User Lookup</a>
+      <a href="/settings" class="{% if '/settings' in request.path %}active{% endif %}">Settings</a>
+    </nav>
 
-  <!-- Footer -->
-  <div class="footer">
-    © {{ now.year if now else '2025' }} Celestial Systems
-  </div>
-</aside>
+    <!-- Footer -->
+    <div class="footer">
+      © {{ now.year if now else '2025' }} Celestial Systems
+    </div>
+  </aside>
 
   <!-- Main Content -->
-  <main class="flex-1 p-6 glass-main overflow-y-auto">
+  <main class="flex-1 p-4 sm:p-6 glass-main overflow-y-auto min-w-0">
     {% block content %}{% endblock %}
   </main>
 
@@ -60,7 +115,13 @@
       let settings;
       try { settings = JSON.parse(decodeURIComponent(match[1])); } catch { return; }
 
-      if (settings.font) document.documentElement.style.setProperty("font-family", `"${settings.font}", ui-sans-serif`);
+      // Apply font here too — Tailwind CDN resets body font-family after <head>
+      // so we reapply it once the DOM is ready
+      if (settings.font) {
+        const fontValue = `"${settings.font}", ui-sans-serif, sans-serif`;
+        document.documentElement.style.setProperty('--font-override', fontValue);
+        document.body.style.setProperty('font-family', fontValue, 'important');
+      }
 
       if (settings.title) {
         const pageTitle = "{{ page_title or 'Dashboard' }}";
@@ -71,7 +132,11 @@
 
       if (settings.icon) {
         let favicon = document.querySelector("link[rel='icon']");
-        if (!favicon) { favicon = document.createElement("link"); favicon.rel = "icon"; document.head.appendChild(favicon); }
+        if (!favicon) {
+          favicon = document.createElement("link");
+          favicon.rel = "icon";
+          document.head.appendChild(favicon);
+        }
         favicon.href = settings.icon;
         const sidebarIcon = document.getElementById("sidebarIcon");
         if (sidebarIcon) sidebarIcon.src = settings.icon;
@@ -80,5 +145,67 @@
   </script>
 
   {% block scripts %}{% endblock %}
+
+  <script type="module">
+    import { createDialog } from '/resources/scripts/ui-notifs.js';
+
+    document.addEventListener('DOMContentLoaded', () => {
+      const toggle = document.getElementById('sidebar-toggle');
+      const sidebar = document.getElementById('sidebar');
+      const overlay = document.getElementById('sidebar-overlay');
+
+      const hamburgerIcon = `<svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h14M3 10h14M3 14h14"/></svg>`;
+      const closeIcon = `<svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4l12 12M16 4L4 16"/></svg>`;
+
+      function closeSidebar() {
+        sidebar.classList.remove('open');
+        overlay.classList.add('hidden');
+        if (toggle) toggle.innerHTML = hamburgerIcon;
+      }
+
+      toggle?.addEventListener('click', () => {
+        const isOpen = sidebar.classList.toggle('open');
+        overlay.classList.toggle('hidden', !isOpen);
+        toggle.innerHTML = isOpen ? closeIcon : hamburgerIcon;
+      });
+
+      overlay?.addEventListener('click', closeSidebar);
+
+      // ── Nav guard ─────────────────────────────────────────────────
+      sidebar?.querySelectorAll('nav a').forEach(link => {
+        link.addEventListener('click', async (e) => {
+          const destination = link.href;
+
+          // Same page — nothing to do
+          if (destination === window.location.href) {
+            closeSidebar();
+            return;
+          }
+
+          // No pending changes — let browser navigate normally
+          if (!window.__hasPendingChanges) {
+            closeSidebar();
+            return;
+          }
+
+          // Has pending changes — block and ask
+          e.preventDefault();
+          e.stopImmediatePropagation();
+
+          closeSidebar();
+
+          const confirmed = await createDialog(
+            'You have unsaved changes. Discard them and leave this page?'
+          );
+
+          if (confirmed) {
+            window.__hasPendingChanges = false;
+            window.location.assign(destination);
+          }
+        });
+      });
+    });
+  </script>
 </body>
+
 </html>

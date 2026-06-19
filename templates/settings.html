@@ -2,12 +2,6 @@
 
 {% block content %}
 <link rel="stylesheet" href="/resources/styles/dashboard.css">
-<link href="https://fonts.googleapis.com/css2?
-  family=Arimo&family=DM+Sans&family=Lato&family=Lora&family=Merriweather&
-  family=Nunito&family=Nunito+Sans&family=Noto+Sans&family=Open+Sans&
-  family=Oswald&family=PT+Sans&family=Raleway&family=Roboto+Mono&
-  family=Roboto+Slab&family=Rubik&family=Science+Gothic&family=Ubuntu&
-  family=Work+Sans&display=swap&family=Inter&display=swap" rel="stylesheet">
 
 <div class="min-h-screen py-10 px-6 bg-transparent text-white">
   <div class="max-w-4xl mx-auto">
@@ -24,60 +18,58 @@
       <!-- Website Title -->
       <div>
         <label class="text-lg font-semibold text-[#64ffda]">Website Title</label>
-        <input id="titleInput"
-          placeholder="Enter new website title"
-          class="w-full mt-2 p-3 rounded-lg bg-blue-950/40 border border-blue-800 text-white outline-none focus:ring-2 focus:ring-[#64ffda]"
-        >
+        <input id="titleInput" placeholder="Enter new website title"
+          class="w-full mt-2 p-3 rounded-lg bg-blue-950/40 border border-blue-800 text-white outline-none focus:ring-2 focus:ring-[#64ffda]">
       </div>
 
       <!-- Icon URL -->
       <div>
         <label class="text-lg font-semibold text-[#64ffda]">Website Icon (Direct Image URL)</label>
-        <input id="iconInput"
-          placeholder="Paste image URL"
-          class="w-full mt-2 p-3 rounded-lg bg-blue-950/40 border border-blue-800 text-white outline-none focus:ring-2 focus:ring-[#64ffda]"
-        >
+        <input id="iconInput" placeholder="Paste image URL"
+          class="w-full mt-2 p-3 rounded-lg bg-blue-950/40 border border-blue-800 text-white outline-none focus:ring-2 focus:ring-[#64ffda]">
 
         <div id="iconPreviewContainer">
-            <img id="iconPreview" src="" alt="Icon Preview" />
-            <span id="iconError" style="display:none;color:red;">Invalid image URL</span>
+          <img id="iconPreview" src="" alt="Icon Preview" />
+          <span id="iconError" style="display:none;color:red;">Invalid image URL</span>
         </div>
       </div>
 
       <!-- Default Rank -->
-        <div>
-          <label class="text-lg font-semibold text-[#64ffda]">Default Rank</label>
-          <select id="defaultRankInput" class="w-full mt-2 p-3 rounded-lg bg-blue-950/40 border border-blue-800 text-white outline-none focus:ring-2 focus:ring-[#64ffda]">
-              <option value="User">User</option>
-              <option value="Admin">Admin</option>
-              <option value="Moderator">Moderator</option>
-              <option value="Owner">Owner</option>
-          </select>
+      <div>
+        <label class="text-lg font-semibold text-[#64ffda]">Default Rank</label>
+        <select id="defaultRankInput"
+          class="w-full mt-2 p-3 rounded-lg bg-blue-950/40 border border-blue-800 text-white outline-none focus:ring-2 focus:ring-[#64ffda]">
+          <option value="User">User</option>
+          <option value="Admin">Admin</option>
+          <option value="Moderator">Moderator</option>
+          <option value="Owner">Owner</option>
+        </select>
       </div>
 
       <!-- Font Selection -->
       <div>
         <label class="text-lg font-semibold text-[#64ffda]">Dashboard Font</label>
-        <select id="fontSelectInput" class="w-full mt-2 p-3 rounded-lg bg-blue-950/40 border border-blue-800 text-white outline-none focus:ring-2 focus:ring-[#64ffda]">
-            <option value="Inter">Inter (Default)</option>
-            <option value="Science Gothic">Science Gothic</option>
-            <option value="Open Sans">Open Sans</option>
-            <option value="Lato">Lato</option>
-            <option value="Arimo">Arimo</option>
-            <option value="Oswald">Oswald</option>
-            <option value="Roboto Mono">Roboto Mono</option>
-            <option value="Noto Sans">Noto Sans</option>
-            <option value="Raleway">Raleway</option>
-            <option value="Nunito Sans">Nunito Sans</option>
-            <option value="Nunito">Nunito</option>
-            <option value="Rubik">Rubik</option>
-            <option value="Ubuntu">Ubuntu</option>
-            <option value="DM Sans">DM Sans</option>
-            <option value="Roboto Slab">Roboto Slab</option>
-            <option value="Merriweather">Merriweather</option>
-            <option value="Work Sans">Work Sans</option>
-            <option value="PT Sans">PT Sans</option>
-            <option value="Lora">Lora</option>
+        <select id="fontSelectInput"
+          class="w-full mt-2 p-3 rounded-lg bg-blue-950/40 border border-blue-800 text-white outline-none focus:ring-2 focus:ring-[#64ffda]">
+          <option value="Inter">Inter (Default)</option>
+          <option value="Science Gothic">Science Gothic</option>
+          <option value="Open Sans">Open Sans</option>
+          <option value="Lato">Lato</option>
+          <option value="Arimo">Arimo</option>
+          <option value="Oswald">Oswald</option>
+          <option value="Roboto Mono">Roboto Mono</option>
+          <option value="Noto Sans">Noto Sans</option>
+          <option value="Raleway">Raleway</option>
+          <option value="Nunito Sans">Nunito Sans</option>
+          <option value="Nunito">Nunito</option>
+          <option value="Rubik">Rubik</option>
+          <option value="Ubuntu">Ubuntu</option>
+          <option value="DM Sans">DM Sans</option>
+          <option value="Roboto Slab">Roboto Slab</option>
+          <option value="Merriweather">Merriweather</option>
+          <option value="Work Sans">Work Sans</option>
+          <option value="PT Sans">PT Sans</option>
+          <option value="Lora">Lora</option>
         </select>
       </div>
 
@@ -93,102 +85,208 @@
       </div>
 
       <!-- Apply Button -->
-      <button id="applySettings"
-        class="w-full py-3 mt-4 rounded-xl font-bold bg-blue-900/70 border border-blue-700 
+      <button id="applySettings" class="w-full py-3 mt-4 rounded-xl font-bold bg-blue-900/70 border border-blue-700 
                hover:bg-blue-800 hover:scale-[1.03] transition-all duration-300">
         Apply Settings
       </button>
+
+      <!-- Reset Button -->
+<button id="resetSettings" class="w-full py-3 mt-2 rounded-xl font-bold bg-red-900/40 border border-red-700
+         hover:bg-red-800/60 hover:scale-[1.03] transition-all duration-300 text-red-300 hover:text-white">
+  Reset to Defaults
+</button>
 
     </div>
   </div>
 </div>
 
 <style>
-/* Custom toggle / checkbox similar to dashboard style */
-.switch {
-  position: relative;
-  display: inline-block;
-  width: 50px;
-  height: 24px;
-}
-.switch input {
-  opacity: 0;
-  width: 0;
-  height: 0;
-}
-.slider {
-  position: absolute;
-  cursor: pointer;
-  top: 0; left: 0; right: 0; bottom: 0;
-  background-color: rgba(255,255,255,0.1);
-  transition: 0.4s;
-  border-radius: 999px;
-  border: 1px solid #64ffda;
-}
-.slider:before {
-  position: absolute;
-  content: "";
-  height: 18px;
-  width: 18px;
-  left: 3px;
-  bottom: 3px;
-  background-color: #64ffda;
-  transition: 0.4s;
-  border-radius: 50%;
-}
-input:checked + .slider {
-  background-color: rgba(34,255,218,0.2);
-}
-input:checked + .slider:before {
-  transform: translateX(26px);
-}
+  /* Custom toggle / checkbox similar to dashboard style */
+  .switch {
+    position: relative;
+    display: inline-block;
+    width: 50px;
+    height: 24px;
+  }
+
+  .switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+  }
+
+  .slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(255, 255, 255, 0.1);
+    transition: 0.4s;
+    border-radius: 999px;
+    border: 1px solid #64ffda;
+  }
+
+  .slider:before {
+    position: absolute;
+    content: "";
+    height: 18px;
+    width: 18px;
+    left: 3px;
+    bottom: 3px;
+    background-color: #64ffda;
+    transition: 0.4s;
+    border-radius: 50%;
+  }
+
+  input:checked+.slider {
+    background-color: rgba(34, 255, 218, 0.2);
+  }
+
+  input:checked+.slider:before {
+    transform: translateX(26px);
+  }
+
+  #iconPreviewContainer {
+    margin-top: 0.75rem;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    min-height: 48px;
+  }
+
+  #iconPreview {
+    width: 48px;
+    height: 48px;
+    border-radius: 8px;
+    object-fit: cover;
+    border: 1px solid rgba(100, 255, 218, 0.3);
+    display: none;
+    /* hidden until a valid URL loads */
+  }
+
+  #iconError {
+    font-size: 0.8rem;
+  }
 </style>
 
-<script>
-// --------------------------
-// Cookie Helpers
-// --------------------------
-function getSettings() {
+<script type="module">
+import { createToast, createDialog } from '/resources/scripts/ui-notifs.js';
+
+window.createToast = createToast;
+window.createDialog = createDialog;
+
+  // ── Dirty tracking ────────────────────────────────────────────────
+  let settingsDirty = false;
+
+  // Use a setter so any assignment to window.__hasPendingChanges
+  // goes through our controlled setter and can't silently replace the getter
+  Object.defineProperty(window, '__hasPendingChanges', {
+    get() { return settingsDirty; },
+    set(val) { settingsDirty = val; }, // allow external reset (e.g. confirmed=true)
+    configurable: false  // ← changed from true to false, prevents redefinition
+  });
+
+  // --------------------------
+  // Cookie Helpers
+  // --------------------------
+  function getSettings() {
     const match = document.cookie.match(/celestial_settings=([^;]+)/);
     if (!match) return null;
+    try { return JSON.parse(decodeURIComponent(match[1])); } catch { return null; }
+  }
 
-    try {
-        return JSON.parse(decodeURIComponent(match[1]));
-    } catch {
-        return null;
+  // --------------------------
+  // Font Application
+  // --------------------------
+  function applyFont(font) {
+    const fontValue = `"${font}", ui-sans-serif, sans-serif`;
+    document.documentElement.style.setProperty('--font-override', fontValue);
+    document.body.style.setProperty('font-family', fontValue, 'important');
+  }
+
+  // --------------------------
+  // Icon Preview
+  // --------------------------
+  function tryPreviewIcon(url) {
+    const preview = document.getElementById("iconPreview");
+    const error = document.getElementById("iconError");
+
+    if (!url) {
+      preview.src = "";
+      preview.style.display = "none";
+      error.style.display = "none";
+      return;
     }
-}
 
-window.addEventListener("DOMContentLoaded", () => {
+    const tester = new Image();
+    tester.onload = () => { preview.src = url; preview.style.display = "block"; error.style.display = "none"; };
+    tester.onerror = () => { preview.src = ""; preview.style.display = "none"; error.style.display = "block"; };
+    tester.src = url;
+  }
+
+  window.addEventListener("DOMContentLoaded", () => {
     const settings = getSettings() || {};
 
-    // Use saved font or fallback to Inter
-    const font = settings.font || "Inter";
-
-    // Autofill font select
-    document.getElementById("fontSelectInput").value = font;
-
-    // Autofill other settings
+    // Autofill fields
+    document.getElementById("fontSelectInput").value = settings.font || "Inter";
     document.getElementById("titleInput").value = settings.title || "";
     document.getElementById("iconInput").value = settings.icon || "";
     document.getElementById("defaultRankInput").value = settings.defaultRank || "User";
-    document.getElementById("enableQuickLinksInput").checked = 
-        settings.enableQuickLinks !== undefined ? settings.enableQuickLinks : true;
+    document.getElementById("enableQuickLinksInput").checked =
+      settings.enableQuickLinks !== undefined ? settings.enableQuickLinks : true;
 
-    // Apply button
-    document.getElementById("applySettings").addEventListener("click", () => {
-        const newSettings = {
-            title: document.getElementById("titleInput").value.trim(),
-            icon: document.getElementById("iconInput").value.trim(),
-            defaultRank: document.getElementById("defaultRankInput").value,
-            font: document.getElementById("fontSelectInput").value,
-            enableQuickLinks: document.getElementById("enableQuickLinksInput").checked
-        };
+    // Apply saved values immediately (no dirty flag — these are initial loads)
+    if (settings.font) applyFont(settings.font);
+    if (settings.icon) tryPreviewIcon(settings.icon);
 
-        document.cookie = "celestial_settings=" + encodeURIComponent(JSON.stringify(newSettings)) + "; path=/; max-age=" + (60*60*24*365);
-        location.reload();
+    // Live previews
+    document.getElementById("fontSelectInput").addEventListener("change", e => {
+      applyFont(e.target.value);
+      settingsDirty = true;
     });
-});
 
+    document.getElementById("iconInput").addEventListener("input", e => {
+      tryPreviewIcon(e.target.value.trim());
+      settingsDirty = true;
+    });
+
+    // Mark dirty on any field change
+    ['titleInput', 'defaultRankInput'].forEach(id => {
+      document.getElementById(id).addEventListener('input', () => { settingsDirty = true; });
+    });
+    document.getElementById('enableQuickLinksInput').addEventListener('change', () => {
+      settingsDirty = true;
+    });
+
+    // Apply button — save and reload
+    document.getElementById("applySettings").addEventListener("click", () => {
+      const newSettings = {
+        title: document.getElementById("titleInput").value.trim(),
+        icon: document.getElementById("iconInput").value.trim(),
+        defaultRank: document.getElementById("defaultRankInput").value,
+        font: document.getElementById("fontSelectInput").value,
+        enableQuickLinks: document.getElementById("enableQuickLinksInput").checked
+      };
+
+      document.cookie = "celestial_settings=" +
+        encodeURIComponent(JSON.stringify(newSettings)) +
+        "; path=/; max-age=" + (60 * 60 * 24 * 365);
+
+      settingsDirty = false;
+      location.reload();
+    });
+
+    // Reset button — wipe cookie and reload
+document.getElementById("resetSettings").addEventListener("click", async () => {
+  const confirmed = await window.createDialog('Reset all settings to defaults? This cannot be undone.');
+  if (!confirmed) return;
+
+  document.cookie = "celestial_settings=; path=/; max-age=0";
+  settingsDirty = false;
+  location.reload();
+});
+  });
 </script>
 {% endblock %}

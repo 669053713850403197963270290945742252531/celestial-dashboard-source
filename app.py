@@ -91,6 +91,11 @@ init_db()
 # ==========================================================
 # Helpers
 # ==========================================================
+FIELD_ORDER = ["Identifier", "HWID", "DiscordId", "Rank", "JoinDate", "Key", "Notes"]
+
+def normalize_user(user):
+    return {field: user.get(field) for field in FIELD_ORDER}
+
 def login_required(f):
     """Decorator that redirects to login if not signed in."""
 
@@ -294,6 +299,7 @@ def add_user():
             "%m/%d/%y %#I:%M:%S %p"
         )
 
+        users.append(normalize_user(new_user))
         users.append(new_user)
         update_users_on_github(users, sha)
 
@@ -319,7 +325,7 @@ def api_edit_user():
         if index is None:
             return jsonify(success=False, error="User not found")
 
-        users[index] = new_user
+        users[index] = normalize_user(new_user)
         update_users_on_github(users, sha)
         return jsonify(success=True, user=new_user)
     except Exception as e:
@@ -500,6 +506,7 @@ def reroll_key():
 
         # Update the key
         users[user_index]["Key"] = new_key
+        users[user_index] = normalize_user(users[user_index])
 
         # Commit update to GitHub
         update_users_on_github(users, sha)
@@ -650,6 +657,56 @@ def full():
         }
     )
 
+@app.route("/api/save_all", methods=["POST"])
+@login_required
+def save_all():
+    try:
+        data = request.get_json()
+        incoming_users = data.get("users")
+
+        if incoming_users is None:
+            return jsonify(success=False, error="Missing users array"), 400
+
+        # Fetch current SHA (needed to commit to GitHub)
+        users, sha = fetch_users_from_github()
+
+        # Build a set of existing keys for uniqueness checks during reroll
+        existing_keys = {u["Key"] for u in users}
+
+        # Process each incoming user
+        cleaned = []
+        for u in incoming_users:
+            user = dict(u)
+
+            pending_reroll = user.pop("_pendingReroll", False)  # capture it
+            user.pop("whitelisted", None)
+
+            if pending_reroll:  # use the captured value
+                new_key = generate_key()
+                while new_key in existing_keys:
+                    new_key = generate_key()
+                existing_keys.add(new_key)
+                user["Key"] = new_key
+
+            if not user.get("Key"):
+                new_key = generate_key()
+                while new_key in existing_keys:
+                    new_key = generate_key()
+                existing_keys.add(new_key)
+                user["Key"] = new_key
+
+            if not user.get("Notes"):
+                user["Notes"] = None
+
+            cleaned.append(normalize_user(user))
+
+        # Commit the full cleaned array to GitHub
+        update_users_on_github(cleaned, sha)
+
+        return jsonify(success=True)
+
+    except Exception as e:
+        return jsonify(success=False, error=str(e)), 500
 
 # ==========================================================
 # MAIN ENTRY
