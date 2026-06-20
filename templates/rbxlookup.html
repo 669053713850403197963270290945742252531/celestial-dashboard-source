@@ -2,6 +2,8 @@
 
 {% block content %}
 
+<link rel="stylesheet" href="/resources/styles/rbxlookup.css">
+
 <div class="min-h-screen py-6 px-4 sm:py-10 sm:px-6 text-white">
   <div class="max-w-5xl mx-auto">
 
@@ -37,8 +39,7 @@
 
       <!-- Avatar + name summary row -->
       <div id="avatarRow" class="hidden items-center gap-4 mb-6">
-        <img id="avatar"
-          class="w-16 h-16 sm:w-20 sm:h-20 rounded-xl border border-[#64ffda]/30 shadow-lg flex-shrink-0"
+        <img id="avatar" class="w-16 h-16 sm:w-20 sm:h-20 rounded-xl border border-[#64ffda]/30 shadow-lg flex-shrink-0"
           style="opacity:0;transition:opacity 0.3s">
         <div id="avatarMeta" class="text-sm text-gray-300 leading-relaxed"></div>
       </div>
@@ -82,81 +83,14 @@
   </div>
 </div>
 
-<style>
-  .glow-card { box-shadow: 0 0 15px rgba(100,255,218,0.1); }
-  .glow-text { text-shadow: 0 0 10px rgba(100,255,218,0.4); }
-
-  .tab {
-    padding: 6px 14px;
-    border: 1px solid rgba(100,255,218,0.3);
-    border-radius: 8px;
-    cursor: pointer;
-    transition: 0.2s;
-    font-size: 0.875rem;
-    white-space: nowrap;
-  }
-  .tab:hover { background: rgba(100,255,218,0.1); }
-  .active-tab {
-    background: rgba(100,255,218,0.2);
-    box-shadow: 0 0 10px rgba(100,255,218,0.4);
-  }
-
-  .skeleton {
-    height: 14px;
-    margin-bottom: 10px;
-    border-radius: 4px;
-    background: linear-gradient(90deg, #1a1d26, #2a2e3a, #1a1d26);
-    background-size: 400px 100%;
-    animation: shimmer 1.2s infinite;
-  }
-  @keyframes shimmer {
-    0%   { background-position: -400px 0; }
-    100% { background-position: 400px 0; }
-  }
-
-  .disabled { opacity: 0.4; pointer-events: none; }
-
-  .glow-pulse { position: relative; z-index: 1; }
-  .glow-pulse::before {
-    content: "";
-    position: absolute;
-    inset: -2px;
-    border-radius: inherit;
-    background: radial-gradient(circle, rgba(100,255,218,0.25), transparent 70%);
-    opacity: 0.6;
-    filter: blur(12px);
-    z-index: -1;
-    animation: smoothGlow 4s ease-in-out infinite;
-  }
-  .glow-pulse::after {
-    content: "";
-    position: absolute;
-    inset: -6px;
-    border-radius: inherit;
-    background: radial-gradient(circle, rgba(100,255,218,0.15), transparent 80%);
-    filter: blur(20px);
-    z-index: -2;
-    animation: smoothGlow 4s ease-in-out infinite reverse;
-  }
-  @keyframes smoothGlow {
-    0%,100% { opacity:0.4; transform:scale(0.98); }
-    50%      { opacity:0.9; transform:scale(1.02); }
-  }
-
-  /* Join button full-width on mobile */
-  @media (max-width: 640px) {
-    .join-btn { width: 100%; text-align: center; justify-content: center; }
-  }
-</style>
-
 <script>
   let currentTab = "profile";
   let currentData = null;
 
-  const contentBox  = document.getElementById("contentBox");
-  const avatarImg   = document.getElementById("avatar");
-  const avatarRow   = document.getElementById("avatarRow");
-  const avatarMeta  = document.getElementById("avatarMeta");
+  const contentBox = document.getElementById("contentBox");
+  const avatarImg = document.getElementById("avatar");
+  const avatarRow = document.getElementById("avatarRow");
+  const avatarMeta = document.getElementById("avatarMeta");
 
   function skeleton() {
     return `
@@ -169,8 +103,8 @@
   function formatDate(ds) {
     if (!ds) return "Unknown";
     return new Intl.DateTimeFormat(undefined, {
-      year:"numeric", month:"long", day:"numeric",
-      hour:"numeric", minute:"2-digit", timeZoneName:"short"
+      year: "numeric", month: "long", day: "numeric",
+      hour: "numeric", minute: "2-digit", timeZoneName: "short"
     }).format(new Date(ds));
   }
 
@@ -180,7 +114,7 @@
     let months = now.getMonth() - created.getMonth();
     if (months < 0) { years--; months += 12; }
     const parts = [];
-    if (years > 0)  parts.push(years  === 1 ? "1 year"  : `${years} years`);
+    if (years > 0) parts.push(years === 1 ? "1 year" : `${years} years`);
     if (months > 0) parts.push(months === 1 ? "1 month" : `${months} months`);
     return parts.length ? parts.join(", ") : "Less than a month";
   }
@@ -246,8 +180,8 @@
           </p>
           <p><span class="text-gray-500">Last Online</span> &nbsp;
             ${currentData.lastOnline
-              ? formatDate(currentData.lastOnline)
-              : currentData.status !== "Offline" ? "Currently active" : "Unavailable"}
+          ? formatDate(currentData.lastOnline)
+          : currentData.status !== "Offline" ? "Currently active" : "Unavailable"}
           </p>
         </div>
 
@@ -301,25 +235,25 @@
           </h3>
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-1">
             ${currentData.friends.slice(0, 10).map(f =>
-              `<p class="text-gray-300 text-sm px-2 py-1 rounded bg-blue-900/20">${f.name}</p>`
-            ).join("") || '<p class="text-gray-500 text-sm">No friends found.</p>'}
+        `<p class="text-gray-300 text-sm px-2 py-1 rounded bg-blue-900/20">${f.name}</p>`
+      ).join("") || '<p class="text-gray-500 text-sm">No friends found.</p>'}
           </div>
         </div>
         <div>
           <h3 class="text-[#64ffda] font-semibold mb-2">Groups</h3>
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-1">
             ${currentData.groups.map(g =>
-              `<p class="text-gray-300 text-sm px-2 py-1 rounded bg-blue-900/20">
+        `<p class="text-gray-300 text-sm px-2 py-1 rounded bg-blue-900/20">
                  ${g.name} <span class="text-gray-500">(${g.role})</span>
                </p>`
-            ).join("") || '<p class="text-gray-500 text-sm">No groups found.</p>'}
+      ).join("") || '<p class="text-gray-500 text-sm">No groups found.</p>'}
           </div>
         </div>`;
     }
   }
 
   document.getElementById("lookupBtn").onclick = async () => {
-    const input      = document.getElementById("userInput").value.trim();
+    const input = document.getElementById("userInput").value.trim();
     const avatarType = document.getElementById("avatarType").value;
     if (!input) return;
 
@@ -327,7 +261,7 @@
     avatarRow.classList.add("hidden");
     avatarImg.style.opacity = 0;
 
-    const res  = await fetch(`/api/full?query=${encodeURIComponent(input)}&avatar=${avatarType}`);
+    const res = await fetch(`/api/full?query=${encodeURIComponent(input)}&avatar=${avatarType}`);
     const data = await res.json();
 
     if (data.error) {

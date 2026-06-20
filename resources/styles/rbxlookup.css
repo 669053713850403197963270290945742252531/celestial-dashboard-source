@@ -1,0 +1,108 @@
+.glow-card {
+  box-shadow: 0 0 15px rgba(100, 255, 218, 0.1);
+}
+
+.glow-text {
+  text-shadow: 0 0 10px rgba(100, 255, 218, 0.4);
+}
+
+.tab {
+  padding: 6px 14px;
+  border: 1px solid rgba(100, 255, 218, 0.3);
+  border-radius: 8px;
+  cursor: pointer;
+  transition: 0.2s;
+  font-size: 0.875rem;
+  white-space: nowrap;
+}
+
+.tab:hover {
+  background: rgba(100, 255, 218, 0.1);
+}
+
+.active-tab {
+  background: rgba(100, 255, 218, 0.2);
+  box-shadow: 0 0 10px rgba(100, 255, 218, 0.4);
+}
+
+.skeleton {
+  height: 14px;
+  margin-bottom: 10px;
+  border-radius: 4px;
+  background: linear-gradient(90deg, #1a1d26, #2a2e3a, #1a1d26);
+  background-size: 400px 100%;
+  animation: shimmer 1.2s infinite;
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: -400px 0;
+  }
+
+  100% {
+    background-position: 400px 0;
+  }
+}
+
+.disabled {
+  opacity: 0.4;
+  pointer-events: none;
+}
+
+.glow-pulse {
+  position: relative;
+  z-index: 1;
+}
+
+.glow-pulse::before {
+  content: "";
+  position: absolute;
+  inset: -2px;
+  border-radius: inherit;
+  background: radial-gradient(
+    circle,
+    rgba(100, 255, 218, 0.25),
+    transparent 70%
+  );
+  opacity: 0.6;
+  filter: blur(12px);
+  z-index: -1;
+  animation: smoothGlow 4s ease-in-out infinite;
+}
+
+.glow-pulse::after {
+  content: "";
+  position: absolute;
+  inset: -6px;
+  border-radius: inherit;
+  background: radial-gradient(
+    circle,
+    rgba(100, 255, 218, 0.15),
+    transparent 80%
+  );
+  filter: blur(20px);
+  z-index: -2;
+  animation: smoothGlow 4s ease-in-out infinite reverse;
+}
+
+@keyframes smoothGlow {
+  0%,
+  100% {
+    opacity: 0.4;
+    transform: scale(0.98);
+  }
+
+  50% {
+    opacity: 0.9;
+    transform: scale(1.02);
+  }
+}
+
+/* Join button full-width on mobile */
+@media (max-width: 640px) {
+  .join-btn {
+    width: 100%;
+    text-align: center;
+    justify-content: center;
+  }
+}

@@ -1,0 +1,37 @@
+test users:
+
+identifier: Corrade
+hwid: 2489bdd441bb33ecf9a33c110ba7e22de2b1588facffed1f6f41539c62b79c1d
+discord id: 999776749070078004
+rank: Owner
+notes: ts notes
+
+identifier: CaptainEz
+hwid: cbd3cfb9b9f51bbbfbf08759e243f5b3519cbf6ecc219ee95fe7c667e32c0a8d
+discord id: 89550090379946397
+rank: User
+notes: idk why i always test with this dude
+
+identifier: Dyno
+hwid: 569c7f0b41ce9649602a0218cd02ed0b0a3d93130329451cc782b7dfda79ce71
+discord id: 155149108183695360
+rank: User
+notes: 
+
+identifier: roblox update track
+hwid: 21f1df4cca171176e1e7f1e5744cebac5eff81ee761b6e695d2a2b37b0f8d49d
+discord id: 1218229252692906089
+rank: User
+notes: 
+
+identifier: negro
+hwid: 45d25abffe8c792d74d30346429b5bc244b815eeb378a9c38395f7a466cf6894
+discord id: 1093831497594707998
+rank: Admin
+notes: 
+
+identifier: touch grass
+hwid: 5e77061a9b955ac03d9a574a8a68d8a58005949fa4fdd3d9e38dbd263028ffe8
+discord id: 1400346887600603247
+rank: Moderator
+notes: 
