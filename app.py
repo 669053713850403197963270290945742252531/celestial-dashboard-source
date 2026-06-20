@@ -62,15 +62,13 @@ def init_db():
     conn = sqlite3.connect(DB_PATH)
     conn.execute("PRAGMA foreign_keys = ON;")
     cursor = conn.cursor()
-    cursor.execute(
-        """
+    cursor.execute("""
         CREATE TABLE IF NOT EXISTS users (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             username TEXT NOT NULL UNIQUE,
             password TEXT NOT NULL
         );
-    """
-    )
+    """)
     conn.commit()
 
     cursor.execute("SELECT id, username, password FROM users;")
@@ -93,8 +91,10 @@ init_db()
 # ==========================================================
 FIELD_ORDER = ["Identifier", "HWID", "DiscordId", "Rank", "JoinDate", "Key", "Notes"]
 
+
 def normalize_user(user):
     return {field: user.get(field) for field in FIELD_ORDER}
+
 
 def login_required(f):
     """Decorator that redirects to login if not signed in."""
@@ -108,16 +108,47 @@ def login_required(f):
     return wrapper
 
 
+# ----------------------------------------------------------
+# Roblox API helpers
+# ----------------------------------------------------------
+# Roblox's API will sometimes silently reject/throttle requests that look
+# like bot traffic (default python-requests User-Agent, datacenter IPs like
+# Render's). Sending a normal browser User-Agent and a timeout reduces that,
+# but we still defensively check response shapes below instead of assuming
+# every call returns the "happy path" JSON.
+ROBLOX_HEADERS = {
+    "User-Agent": (
+        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
+        "(KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36"
+    ),
+    "Accept": "application/json",
+    "Content-Type": "application/json",
+}
+ROBLOX_TIMEOUT = 10  # seconds
+
+
+def roblox_get(url, **kwargs):
+    kwargs.setdefault("headers", ROBLOX_HEADERS)
+    kwargs.setdefault("timeout", ROBLOX_TIMEOUT)
+    return requests.get(url, **kwargs)
+
+
+def roblox_post(url, **kwargs):
+    kwargs.setdefault("headers", ROBLOX_HEADERS)
+    kwargs.setdefault("timeout", ROBLOX_TIMEOUT)
+    return requests.post(url, **kwargs)
+
+
 def get_user_id(query):
     if query.isdigit():
         return query
 
     url = "https://users.roblox.com/v1/usernames/users"
-    res = requests.post(
+    res = roblox_post(
         url, json={"usernames": [query], "excludeBannedUsers": False}
     ).json()
 
-    if res["data"]:
+    if res.get("data"):
         return res["data"][0]["id"]
 
     return None
@@ -127,7 +158,39 @@ def get_avatar(user_id, avatar_type):
     type_map = {"headshot": "avatar-headshot", "bust": "avatar-bust", "full": "avatar"}
 
     url = f"https://thumbnails.roblox.com/v1/users/{type_map[avatar_type]}?userIds={user_id}&size=150x150&format=Png"
-    return requests.get(url).json()["data"][0]["imageUrl"]
+    res = roblox_get(url).json()
+    data = res.get("data") or []
+    if not data:
+        return None
+    return data[0].get("imageUrl")
+
+
+def get_presence(user_id):
+    """Fetch presence info for a user, never raises, always returns a dict."""
+    default = {
+        "userPresenceType": 0,
+        "lastOnline": None,
+        "placeId": None,
+        "gameId": None,
+    }
+    try:
+        res = roblox_post(
+            "https://presence.roblox.com/v1/presence/users",
+            json={"userIds": [int(user_id)]},
+        )
+        data = res.json()
+    except Exception as e:
+        print(f"[presence] request failed: {e}")
+        return default
+
+    presences = data.get("userPresences")
+    if not presences:
+        # Log the raw response so it's visible in Render logs for debugging
+        # (e.g. rate limiting / bot-detection error payloads).
+        print(f"[presence] unexpected response (status {res.status_code}): {data}")
+        return default
+
+    return presences[0]
 
 
 # ==========================================================
@@ -447,7 +510,9 @@ def api_github_update_users():
         url = f"https://api.github.com/repos/{GITHUB_USER}/{GITHUB_REPO}/contents/{GITHUB_FILE}"
         payload = {
             "message": "",
-            "content": base64.b64encode(json.dumps(normalized, indent=4).encode()).decode(),
+            "content": base64.b64encode(
+                json.dumps(normalized, indent=4).encode()
+            ).decode(),
             "sha": sha,
             "branch": GITHUB_BRANCH,
         }
@@ -526,32 +591,30 @@ def get_user():
     if not user_id:
         return jsonify({"error": "User not found"})
 
-    user = requests.get(f"https://users.roblox.com/v1/users/{user_id}").json()
+    user = roblox_get(f"https://users.roblox.com/v1/users/{user_id}").json()
 
-    avatar = requests.get(
+    avatar_data = roblox_get(
         f"https://thumbnails.roblox.com/v1/users/avatar-headshot?userIds={user_id}&size=150x150&format=Png"
     ).json()
+    avatar_url = None
+    if avatar_data.get("data"):
+        avatar_url = avatar_data["data"][0].get("imageUrl")
 
-    presence = requests.post(
-        "https://presence.roblox.com/v1/presence/users",
-        json={"userIds": [int(user_id)]},
-    ).json()
-
-    p = presence["userPresences"][0]
+    p = get_presence(user_id)
 
     return jsonify(
         {
             "id": user_id,
-            "username": user["name"],
-            "displayName": user["displayName"],
-            "description": user["description"],
-            "created": user["created"],
-            "avatar": avatar["data"][0]["imageUrl"],
-            "status": p["userPresenceType"],
+            "username": user.get("name"),
+            "displayName": user.get("displayName"),
+            "description": user.get("description"),
+            "created": user.get("created"),
+            "avatar": avatar_url,
+            "status": p.get("userPresenceType"),
             "lastOnline": p.get("lastOnline"),
             "placeId": p.get("placeId"),
             "jobId": p.get("gameId"),
-            "joinable": p.get("placeId") and p.get("gameId"),
+            "joinable": bool(p.get("placeId") and p.get("gameId")),
         }
     )
 
@@ -565,65 +628,55 @@ def full():
     if not user_id:
         return jsonify({"error": "User not found"})
 
-    user = requests.get(f"https://users.roblox.com/v1/users/{user_id}").json()
+    user = roblox_get(f"https://users.roblox.com/v1/users/{user_id}").json()
 
     # Friends
     friends = (
-        requests.get(f"https://friends.roblox.com/v1/users/{user_id}/friends")
+        roblox_get(f"https://friends.roblox.com/v1/users/{user_id}/friends")
         .json()
         .get("data", [])
     )
 
     # Groups
     groups = (
-        requests.get(f"https://groups.roblox.com/v1/users/{user_id}/groups/roles")
+        roblox_get(f"https://groups.roblox.com/v1/users/{user_id}/groups/roles")
         .json()
         .get("data", [])
     )
 
     # Followers / Following
-    followers = requests.get(
+    followers = roblox_get(
         f"https://friends.roblox.com/v1/users/{user_id}/followers/count"
     ).json()
-    following = requests.get(
+    following = roblox_get(
         f"https://friends.roblox.com/v1/users/{user_id}/followings/count"
     ).json()
-    friends_count = requests.get(
+    friends_count = roblox_get(
         f"https://friends.roblox.com/v1/users/{user_id}/friends/count"
     ).json()
 
-    # Inventory (may fail)
+    # Inventory (may fail / be private)
     inventory = []
-
     try:
-        assets = requests.get(
+        assets = roblox_get(
             f"https://inventory.roblox.com/v2/users/{user_id}/inventory?assetTypes=Hat,Shirt,Pants,Face,Gear&limit=50"
         ).json()
-
         inventory = assets.get("data", [])
-
-    except:
+    except Exception as e:
+        print(f"[inventory] request failed: {e}")
         inventory = None
 
-    presence = requests.post(
-        "https://presence.roblox.com/v1/presence/users",
-        json={"userIds": [int(user_id)]},
-    ).json()
-
-    p = presence["userPresences"][0]
+    # Presence (never raises now)
+    p = get_presence(user_id)
 
     status_map = {0: "Offline", 1: "Online", 2: "In Game", 3: "In Studio"}
 
-    # Presence data
     userPresenceType = p.get("userPresenceType")  # 0=offline, 1=online, 2=in-game
-
     place_id = p.get("placeId")
     job_id = p.get("gameId")
 
-    # Better logic
     can_join = userPresenceType == 2 and place_id is not None
 
-    # Optional: fallback flag (UI hint)
     if userPresenceType == 2:
         join_status = "in_game"
     else:
@@ -632,10 +685,10 @@ def full():
     return jsonify(
         {
             "id": user_id,
-            "username": user["name"],
-            "displayName": user["displayName"],
-            "description": user["description"],
-            "created": user["created"],
+            "username": user.get("name"),
+            "displayName": user.get("displayName"),
+            "description": user.get("description"),
+            "created": user.get("created"),
             "avatar": get_avatar(user_id, avatar_type),
             "friends": friends,
             "groups": [
@@ -649,7 +702,7 @@ def full():
             "followers": followers.get("count", 0),
             "following": following.get("count", 0),
             "friendsCount": friends_count.get("count", 0),
-            "status": status_map.get(p["userPresenceType"], "Unknown"),
+            "status": status_map.get(userPresenceType, "Unknown"),
             "lastOnline": p.get("lastOnline"),
             "placeId": place_id,
             "jobId": job_id,
@@ -657,6 +710,7 @@ def full():
             "joinStatus": join_status,
         }
     )
+
 
 @app.route("/api/save_all", methods=["POST"])
 @login_required
@@ -708,6 +762,7 @@ def save_all():
 
     except Exception as e:
         return jsonify(success=False, error=str(e)), 500
+
 
 # ==========================================================
 # MAIN ENTRY
