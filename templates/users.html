@@ -199,7 +199,10 @@ window.saveChanges = async function () {
     const data = await res.json();
     if (data.success) {
       createToast("Changes saved and committed!", "success");
-      await fetchUsers(); // re-sync from server, clears dirty state
+      // Don't re-fetch and just trust stagedUsers as the source
+      users = structuredClone(stagedUsers);
+      clearDirty();
+      renderTable();
     } else {
       createToast("Save failed: " + data.error, "error");
     }
